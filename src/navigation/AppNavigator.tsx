@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
@@ -8,16 +7,9 @@ import { View, Text, StyleSheet } from 'react-native';
 // అసలైన స్క్రీన్స్ ఇంపోర్ట్
 import HomeScreen from '../screens/HomeScreen';
 import MarketplaceScreen from '../screens/MarketplaceScreen';
+import SellScreen from '../screens/SellScreen';
 
-const SellScreen = () => {
-  const { t } = useTranslation();
-  return (
-    <View style={styles.center}>
-      <Text>{t('sellScrap')}</Text>
-    </View>
-  );
-};
-
+// తాత్కాలిక స్క్రీన్స్ (Chat & Profile)
 const ChatScreen = () => {
   const { t } = useTranslation();
   return (
