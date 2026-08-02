@@ -1,21 +1,13 @@
+
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { View, Text, StyleSheet } from 'react-native';
 
-// రియల్ హోమ్ స్క్రీన్ ఇంపోర్ట్
+// అసలైన స్క్రీన్స్ ఇంపోర్ట్
 import HomeScreen from '../screens/HomeScreen';
-
-// తాత్కాలికంగా మిగతా స్క్రీన్స్ కోసం సింపుల్ కాంపోనెంట్స్
-const MarketplaceScreen = () => {
-  const { t } = useTranslation();
-  return (
-    <View style={styles.center}>
-      <Text>{t('marketplace')}</Text>
-    </View>
-  );
-};
+import MarketplaceScreen from '../screens/MarketplaceScreen';
 
 const SellScreen = () => {
   const { t } = useTranslation();
