@@ -48,6 +48,13 @@ export default function LoginScreen({ navigation }: any) {
       </TouchableOpacity>
 
       <TouchableOpacity 
+        style={styles.secondaryButton} 
+        onPress={() => navigation.navigate('MobileLogin')}
+      >
+        <Text style={styles.secondaryButtonText}>Login with Mobile Number</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity 
         style={styles.linkButton} 
         onPress={() => navigation.navigate('Register')}
       >
@@ -94,6 +101,20 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  secondaryButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#2e7d32',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  secondaryButtonText: {
+    color: '#2e7d32',
     fontSize: 16,
     fontWeight: 'bold',
   },
