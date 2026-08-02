@@ -2,19 +2,12 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-
-// తాత్కాలికంగా స్క్రీన్స్ కోసం సింపుల్ కాంపోనెంట్స్ వాడదాం (తర్వాత రియల్ స్క్రీన్స్ పెడదాం)
 import { View, Text, StyleSheet } from 'react-native';
 
-const HomeScreen = () => {
-  const { t } = useTranslation();
-  return (
-    <View style={styles.center}>
-      <Text>{t('welcome')}</Text>
-    </View>
-  );
-};
+// రియల్ హోమ్ స్క్రీన్ ఇంపోర్ట్
+import HomeScreen from '../screens/HomeScreen';
 
+// తాత్కాలికంగా మిగతా స్క్రీన్స్ కోసం సింపుల్ కాంపోనెంట్స్
 const MarketplaceScreen = () => {
   const { t } = useTranslation();
   return (
