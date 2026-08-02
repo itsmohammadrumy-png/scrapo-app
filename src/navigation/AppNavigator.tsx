@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -6,6 +7,7 @@ import { NavigationContainer } from '@react-navigation/native';
 // Screens
 import SplashScreen from '../screens/SplashScreen';
 import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import MarketplaceScreen from '../screens/MarketplaceScreen';
 import SellScreen from '../screens/SellScreen';
@@ -33,6 +35,7 @@ export default function AppNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="MainApp" component={MainTabNavigator} />
       </Stack.Navigator>
     </NavigationContainer>

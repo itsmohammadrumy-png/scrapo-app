@@ -1,29 +1,29 @@
-
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { loginUser } from '../services/authService';
+import { registerUser } from '../services/authService';
 
-export default function LoginScreen({ navigation }: any) {
+export default function RegisterScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please enter email and password');
       return;
     }
     try {
-      await loginUser(email, password);
+      await registerUser(email, password);
+      Alert.alert('Success', 'Account created successfully!');
       navigation.replace('MainApp');
     } catch (error: any) {
-      Alert.alert('Login Failed', error.message);
+      Alert.alert('Registration Failed', error.message);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome Back</Text>
-      <Text style={styles.subtitle}>Login to continue to Scrapo</Text>
+      <Text style={styles.title}>Create Account</Text>
+      <Text style={styles.subtitle}>Sign up to start using Scrapo</Text>
 
       <TextInput
         style={styles.input}
@@ -36,22 +36,22 @@ export default function LoginScreen({ navigation }: any) {
 
       <TextInput
         style={styles.input}
-        placeholder="Password"
+        placeholder="Password (min 6 characters)"
         placeholderTextColor="#888"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>Register</Text>
       </TouchableOpacity>
 
       <TouchableOpacity 
         style={styles.linkButton} 
-        onPress={() => navigation.navigate('Register')}
+        onPress={() => navigation.goBack()}
       >
-        <Text style={styles.linkText}>Don't have an account? Register</Text>
+        <Text style={styles.linkText}>Already have an account? Login</Text>
       </TouchableOpacity>
     </View>
   );
