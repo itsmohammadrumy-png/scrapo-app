@@ -75,21 +75,47 @@ export default function MarketplaceScreen({ navigation }: any) {
     );
   };
 
-  const renderListingItem = ({ item }: any) => (
-    <TouchableOpacity
-      style={styles.listingCard}
-      onPress={() => navigation.navigate('AdDetail', { item })}
-    >
-      <View style={styles.listingInfo}>
-        <Text style={styles.listingTitle}>{item.title || item.category}</Text>
-        {/* ?? instead of || so a price of 0 still shows "₹ 0" instead of "N/A" */}
-        <Text style={styles.listingPrice}>₹ {item.price ?? 'N/A'}</Text>
-        <Text style={styles.listingCategory} numberOfLines={1}>
-          {item.description || 'No description'}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderListingItem = ({ item }: any) => {
+    const attrs = item.attributes || {};
+    const isJobListing = item.category?.toLowerCase().includes('job');
+    const isHiringListing = attrs.jobListingType === 'Hiring (Job Vacancy)';
+    const isSeekerListing = attrs.jobListingType === 'Looking for Job (Job Wanted)';
+
+    // For job listings, show something more useful than the generic
+    // description line — company name for vacancies, or
+    // education/skills for job seekers.
+    let subInfo = item.description || 'No description';
+    if (isHiringListing) {
+      subInfo = attrs.companyName ? `${attrs.companyName}` : (item.description || 'No description');
+    } else if (isSeekerListing) {
+      subInfo = attrs.educationQualification
+        ? `${attrs.educationQualification}${attrs.skills ? ' • ' + attrs.skills : ''}`
+        : (item.description || 'No description');
+    }
+
+    return (
+      <TouchableOpacity
+        style={styles.listingCard}
+        onPress={() => navigation.navigate('AdDetail', { item })}
+      >
+        <View style={styles.listingInfo}>
+          {isJobListing && attrs.jobListingType && (
+            <View style={[styles.jobBadge, isHiringListing ? styles.hiringBadge : styles.seekerBadge]}>
+              <Text style={[styles.jobBadgeText, !isHiringListing && styles.seekerBadgeText]}>
+                {isHiringListing ? 'Hiring' : 'Job Wanted'}
+              </Text>
+            </View>
+          )}
+          <Text style={styles.listingTitle}>{item.title || item.category}</Text>
+          {/* ?? instead of || so a price of 0 still shows "₹ 0" instead of "N/A" */}
+          <Text style={styles.listingPrice}>₹ {item.price ?? 'N/A'}</Text>
+          <Text style={styles.listingCategory} numberOfLines={1}>
+            {subInfo}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -227,6 +253,27 @@ const styles = StyleSheet.create({
   },
   listingInfo: {
     flex: 1,
+  },
+  jobBadge: {
+    alignSelf: 'flex-start',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    marginBottom: 4,
+  },
+  hiringBadge: {
+    backgroundColor: '#e8f5e9',
+  },
+  seekerBadge: {
+    backgroundColor: '#e3f2fd',
+  },
+  jobBadgeText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#2e7d32',
+  },
+  seekerBadgeText: {
+    color: '#1565c0',
   },
   listingTitle: {
     fontSize: 16,
