@@ -31,6 +31,12 @@ export default function AdPostScreen({ route, navigation }: any) {
   const [listingType, setListingType] = useState('');
   const [jobType, setJobType] = useState('');
   const [experience, setExperience] = useState('');
+  const [jobListingType, setJobListingType] = useState(''); // 'Hiring' or 'Looking for Job'
+  const [educationQualification, setEducationQualification] = useState(''); // job seeker's education
+  const [minQualification, setMinQualification] = useState(''); // employer's requirement
+  const [companyName, setCompanyName] = useState('');
+  const [skills, setSkills] = useState('');
+  const [preferredJobLocation, setPreferredJobLocation] = useState('');
   const [condition, setCondition] = useState('');
   const [size, setSize] = useState('');
   const [petBreed, setPetBreed] = useState('');
@@ -138,6 +144,8 @@ export default function AdPostScreen({ route, navigation }: any) {
   const furnishingOptions = ['Furnished', 'Semi-Furnished', 'Unfurnished'];
   const jobTypeList = ['Full-time', 'Part-time', 'Internship', 'Work from Home', 'Freelance'];
   const experienceOptions = ['Fresher', '1-3 yrs', '3-5 yrs', '5+ yrs'];
+  const jobListingTypeOptions = ['Hiring (Job Vacancy)', 'Looking for Job (Job Wanted)'];
+  const educationOptions = ['No Formal Education', 'Below 10th', '10th Pass', 'Intermediate / 12th', 'ITI / Diploma', 'Graduate (B.A/B.Com/B.Sc etc.)', 'B.Tech / Engineering', 'Post Graduate', 'Others'];
   const conditionList = ['New', 'Excellent', 'Good', 'Fair', 'Needs Repair'];
   const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size', 'Other'];
   const petBreedOptions = ['Labrador', 'German Shepherd', 'Golden Retriever', 'Pug', 'Beagle', 'Pomeranian', 'Shih Tzu', 'Rottweiler', 'Dobermann', 'Husky', 'Indie/Mixed Breed', 'Persian Cat', 'Siamese Cat', 'Indie Cat', 'Parrot', 'Love Bird', 'Other'];
@@ -172,6 +180,19 @@ export default function AdPostScreen({ route, navigation }: any) {
     else if (modalType === 'furnishing') setFurnishing(item);
     else if (modalType === 'jobType') setJobType(item);
     else if (modalType === 'experience') setExperience(item);
+    else if (modalType === 'jobListingType') {
+      setJobListingType(item);
+      // Listing type changed — reset fields that only applied to the other side
+      setEducationQualification('');
+      setMinQualification('');
+      setCompanyName('');
+      setSkills('');
+      setPreferredJobLocation('');
+      setJobType('');
+      setExperience('');
+    }
+    else if (modalType === 'educationQualification') setEducationQualification(item);
+    else if (modalType === 'minQualification') setMinQualification(item);
     else if (modalType === 'condition') setCondition(item);
     else if (modalType === 'size') setSize(item);
     else if (modalType === 'petBreed') setPetBreed(item);
@@ -216,6 +237,8 @@ export default function AdPostScreen({ route, navigation }: any) {
   const isPet = catLower.includes('pet');
   const isService = catLower.includes('service');
   const needsCondition = isMobile || isLaptop || catLower.includes('electro') || catLower.includes('furnitur') || isFashion;
+  const isHiring = isJob && jobListingType === 'Hiring (Job Vacancy)';
+  const isJobSeeker = isJob && jobListingType === 'Looking for Job (Job Wanted)';
 
   // pick correct brand/model list for the current category
   const currentBrandList = isMobile ? mobileBrandList
@@ -238,7 +261,9 @@ export default function AdPostScreen({ route, navigation }: any) {
     : isCar ? 'e.g., Honda City VX / Maruti Swift ZXI'
     : isBike ? 'e.g., Royal Enfield Classic 350 / Pulsar NS200'
     : isProperty ? 'e.g., 2 BHK Flat for Rent in Gachibowli'
-    : isJob ? 'e.g., Data Entry Executive / Delivery Boy Required'
+    : isHiring ? 'e.g., Data Entry Executive / Delivery Boy Required'
+    : isJobSeeker ? 'e.g., Experienced Data Entry Operator Available'
+    : isJob ? 'e.g., Data Entry Executive Required / Available'
     : isFashion ? 'e.g., Men\'s Formal Shirt / Women\'s Kurti Set'
     : isPet ? 'e.g., Labrador Puppies for Sale'
     : isService ? 'e.g., Home AC Repair / Home Tuition Classes'
@@ -251,6 +276,14 @@ export default function AdPostScreen({ route, navigation }: any) {
     }
     if (!title || !priceOrSalary) {
       Alert.alert('Error', 'Please enter item title and price/salary');
+      return;
+    }
+    if (isJob && !jobListingType) {
+      Alert.alert('Error', 'Please select whether you are Hiring or Looking for a Job.');
+      return;
+    }
+    if (isJobSeeker && !educationQualification) {
+      Alert.alert('Error', 'Please select your Education Qualification.');
       return;
     }
 
@@ -299,8 +332,14 @@ export default function AdPostScreen({ route, navigation }: any) {
           bhk,
           area,
           furnishing,
+          jobListingType,
           jobType,
           experience,
+          educationQualification,
+          minQualification,
+          companyName,
+          skills,
+          preferredJobLocation,
           condition,
           size: finalSize,
           petBreed: finalPetBreed,
@@ -496,15 +535,77 @@ export default function AdPostScreen({ route, navigation }: any) {
         {/* Jobs */}
         {isJob && (
           <>
-            <Text style={styles.label}>Job Type *</Text>
-            <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('jobType', jobTypeList)}>
-              <Text style={styles.dropdownButtonText}>{jobType || 'Select Job Type'}</Text>
+            <Text style={styles.label}>Job Listing Type *</Text>
+            <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('jobListingType', jobListingTypeOptions)}>
+              <Text style={styles.dropdownButtonText}>{jobListingType || 'Are you Hiring or Looking for a Job?'}</Text>
             </TouchableOpacity>
 
-            <Text style={styles.label}>Experience Required</Text>
-            <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('experience', experienceOptions)}>
-              <Text style={styles.dropdownButtonText}>{experience || 'Select Experience'}</Text>
-            </TouchableOpacity>
+            {/* ---------- Employer posting a vacancy ---------- */}
+            {isHiring && (
+              <>
+                <Text style={styles.label}>Company / Business Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g., Sri Sai Traders"
+                  placeholderTextColor="#888"
+                  value={companyName}
+                  onChangeText={setCompanyName}
+                />
+
+                <Text style={styles.label}>Job Type *</Text>
+                <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('jobType', jobTypeList)}>
+                  <Text style={styles.dropdownButtonText}>{jobType || 'Select Job Type'}</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.label}>Experience Required</Text>
+                <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('experience', experienceOptions)}>
+                  <Text style={styles.dropdownButtonText}>{experience || 'Select Experience'}</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.label}>Minimum Qualification Required</Text>
+                <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('minQualification', educationOptions)}>
+                  <Text style={styles.dropdownButtonText}>{minQualification || 'Select Minimum Qualification'}</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {/* ---------- Job seeker looking for work ---------- */}
+            {isJobSeeker && (
+              <>
+                <Text style={styles.label}>Education Qualification *</Text>
+                <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('educationQualification', educationOptions)}>
+                  <Text style={styles.dropdownButtonText}>{educationQualification || 'Select Education Qualification'}</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.label}>Skills / Specialization</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g., Tally, MS Excel, Typing 40wpm, Driving"
+                  placeholderTextColor="#888"
+                  value={skills}
+                  onChangeText={setSkills}
+                />
+
+                <Text style={styles.label}>Job Type Preferred *</Text>
+                <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('jobType', jobTypeList)}>
+                  <Text style={styles.dropdownButtonText}>{jobType || 'Select Job Type'}</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.label}>Experience</Text>
+                <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('experience', experienceOptions)}>
+                  <Text style={styles.dropdownButtonText}>{experience || 'Select Experience'}</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.label}>Preferred Job Location</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g., Guntur, Vijayawada, Any"
+                  placeholderTextColor="#888"
+                  value={preferredJobLocation}
+                  onChangeText={setPreferredJobLocation}
+                />
+              </>
+            )}
           </>
         )}
 
@@ -577,7 +678,9 @@ export default function AdPostScreen({ route, navigation }: any) {
         )}
 
         {/* Price or Salary */}
-        <Text style={styles.label}>{isJob ? 'Salary / Pay Range (₹) *' : 'Price (₹) *'}</Text>
+        <Text style={styles.label}>
+          {isJobSeeker ? 'Expected Salary (₹) *' : isJob ? 'Salary / Pay Range (₹) *' : 'Price (₹) *'}
+        </Text>
         <TextInput
           style={styles.input}
           placeholder={isJob ? 'e.g., 15,000 - 25,000 / month' : 'e.g., 25000'}
