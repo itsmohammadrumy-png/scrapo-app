@@ -221,6 +221,18 @@ export default function AdPostScreen({ route, navigation }: any) {
 
   const currentModelOptions = brand ? (currentModelMap[brand] || ['Others']) : [];
 
+  // Category-specific placeholder text for the Item Title field
+  const titlePlaceholder = isMobile ? 'e.g., iPhone 15 Pro / Samsung Galaxy S24'
+    : isLaptop ? 'e.g., Dell Inspiron 15 / MacBook Air M2'
+    : isCar ? 'e.g., Honda City VX / Maruti Swift ZXI'
+    : isBike ? 'e.g., Royal Enfield Classic 350 / Pulsar NS200'
+    : isProperty ? 'e.g., 2 BHK Flat for Rent in Gachibowli'
+    : isJob ? 'e.g., Data Entry Executive / Delivery Boy Required'
+    : isFashion ? 'e.g., Men\'s Formal Shirt / Women\'s Kurti Set'
+    : isPet ? 'e.g., Labrador Puppies for Sale'
+    : isService ? 'e.g., Home AC Repair / Home Tuition Classes'
+    : 'e.g., Sofa Set 3+2 / Study Table';
+
   const handleSubmit = async () => {
     if (!title || !priceOrSalary) {
       Alert.alert('Error', 'Please enter item title and price/salary');
@@ -302,7 +314,7 @@ export default function AdPostScreen({ route, navigation }: any) {
         <Text style={styles.label}>Item Title *</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g., iPhone 15 / Honda City / Data Entry Executive"
+          placeholder={titlePlaceholder}
           placeholderTextColor="#888"
           value={title}
           onChangeText={setTitle}
