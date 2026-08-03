@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Image, TextInput } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { getDocuments } from '../services/firestoreService';
 import { MARKET_CATEGORIES } from '../constants/marketCategories';
@@ -7,6 +7,7 @@ import { MARKET_CATEGORIES } from '../constants/marketCategories';
 export default function MarketplaceScreen({ navigation }: any) {
   const [listings, setListings] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -24,36 +25,32 @@ export default function MarketplaceScreen({ navigation }: any) {
     }
   };
 
-  // Initial load
   useEffect(() => {
     fetchListings();
   }, []);
 
-  // Refetch every time this screen comes back into focus
-  // (e.g. after posting a new ad and navigating back)
   useFocusEffect(
     useCallback(() => {
       fetchListings();
     }, [])
   );
 
-  // Filtered list is derived from listings + selectedCategory,
-  // so it can never get out of sync with the source data.
+  // కేటగిరీ మరియు సెర్చ్ క్వెరీ ఆధారంగా ఫిల్టర్ చేయడం
   const filteredListings = useMemo(() => {
-    if (!selectedCategory) return listings;
-    return listings.filter(
-      (item) => item.category?.toLowerCase() === selectedCategory.toLowerCase()
-    );
-  }, [listings, selectedCategory]);
+    return listings.filter((item) => {
+      const matchesCategory = !selectedCategory || item.category?.toLowerCase() === selectedCategory.toLowerCase();
+      const matchesSearch = item.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            item.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            item.category?.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [listings, selectedCategory, searchQuery]);
 
   const handleCategoryPress = (categoryName: string) => {
     setSelectedCategory((prev) => (prev === categoryName ? null : categoryName));
   };
 
   const handlePostAdPress = () => {
-    // If the user has already picked a category on this screen, carry it
-    // over to the Post Ad form. Otherwise don't force a category — let the
-    // AdPost screen show its own category selector.
     if (selectedCategory) {
       navigation.navigate('AdPost', { categoryName: selectedCategory });
     } else {
@@ -76,42 +73,25 @@ export default function MarketplaceScreen({ navigation }: any) {
   };
 
   const renderListingItem = ({ item }: any) => {
-    const attrs = item.attributes || {};
-    const isJobListing = item.category?.toLowerCase().includes('job');
-    const isHiringListing = attrs.jobListingType === 'Hiring (Job Vacancy)';
-    const isSeekerListing = attrs.jobListingType === 'Looking for Job (Job Wanted)';
-
-    // For job listings, show something more useful than the generic
-    // description line — company name for vacancies, or
-    // education/skills for job seekers.
-    let subInfo = item.description || 'No description';
-    if (isHiringListing) {
-      subInfo = attrs.companyName ? `${attrs.companyName}` : (item.description || 'No description');
-    } else if (isSeekerListing) {
-      subInfo = attrs.educationQualification
-        ? `${attrs.educationQualification}${attrs.skills ? ' • ' + attrs.skills : ''}`
-        : (item.description || 'No description');
-    }
+    const imageUrl = item.images && item.images.length > 0 ? item.images[0] : null;
 
     return (
       <TouchableOpacity
-        style={styles.listingCard}
+        style={styles.gridCard}
         onPress={() => navigation.navigate('AdDetail', { item })}
+        activeOpacity={0.8}
       >
-        <View style={styles.listingInfo}>
-          {isJobListing && attrs.jobListingType && (
-            <View style={[styles.jobBadge, isHiringListing ? styles.hiringBadge : styles.seekerBadge]}>
-              <Text style={[styles.jobBadgeText, !isHiringListing && styles.seekerBadgeText]}>
-                {isHiringListing ? 'Hiring' : 'Job Wanted'}
-              </Text>
-            </View>
-          )}
-          <Text style={styles.listingTitle}>{item.title || item.category}</Text>
-          {/* ?? instead of || so a price of 0 still shows "₹ 0" instead of "N/A" */}
-          <Text style={styles.listingPrice}>₹ {item.price ?? 'N/A'}</Text>
-          <Text style={styles.listingCategory} numberOfLines={1}>
-            {subInfo}
-          </Text>
+        {imageUrl ? (
+          <Image source={{ uri: imageUrl }} style={styles.cardImage} />
+        ) : (
+          <View style={[styles.cardImage, styles.noImageView]}>
+            <Text style={styles.noImageText}>No Image</Text>
+          </View>
+        )}
+        <View style={styles.cardContent}>
+          <Text style={styles.cardPrice}>₹ {item.price ?? 'N/A'}</Text>
+          <Text style={styles.cardTitle} numberOfLines={1}>{item.title || item.category}</Text>
+          <Text style={styles.cardLocation} numberOfLines={1}>📍 {item.location || 'Guntur'}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -119,20 +99,27 @@ export default function MarketplaceScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
+      {/* టాప్ హెడర్ & పోస్ట్ యాడ్ బటన్ */}
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.headerTitle}>Scrapo Marketplace</Text>
-          <Text style={styles.subtitle}>Browse items or filter by category</Text>
+          <Text style={styles.subtitle}>మీకు నచ్చినవి కొనండి & అమ్మండి</Text>
         </View>
         <TouchableOpacity style={styles.postAdButton} onPress={handlePostAdPress}>
-          <Text style={styles.postAdButtonText}>+ Post Ad</Text>
+          <Text style={styles.postAdButtonText}>+ Sell</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionHeader}>
-        Categories {selectedCategory ? `(Filtered: ${selectedCategory})` : ''}
-      </Text>
+      {/* సెర్చ్ బార్ */}
+      <TextInput
+        style={styles.searchInput}
+        placeholder="ప్రొడక్ట్ లేదా లొకేషన్ వెతకండి..."
+        placeholderTextColor="#888"
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
 
+      {/* కేటగిరీస్ లిస్ట్ */}
       <FlatList
         data={MARKET_CATEGORIES}
         renderItem={renderCategoryItem}
@@ -143,28 +130,32 @@ export default function MarketplaceScreen({ navigation }: any) {
       />
 
       <Text style={styles.sectionHeader}>
-        {selectedCategory ? `${selectedCategory} Ads` : 'Recent Ads'}
+        {selectedCategory ? `${selectedCategory} ప్రొడక్ట్స్` : 'అన్ని ప్రకటనలు (Recent Ads)'}
       </Text>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#2e7d32" style={{ marginTop: 20 }} />
+        <ActivityIndicator size="large" color="#2e7d32" style={{ marginTop: 40 }} />
       ) : error ? (
-        <View style={{ marginTop: 20, alignItems: 'center' }}>
-          <Text style={styles.noDataText}>Couldn't load ads. Please try again.</Text>
+        <View style={styles.centerContainer}>
+          <Text style={styles.noDataText}>డేటా లోడ్ అవ్వడంలో సమస్య వచ్చింది.</Text>
           <TouchableOpacity onPress={fetchListings} style={styles.retryButton}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+            <Text style={styles.retryButtonText}>మళ్ళీ ప్రయత్నించు</Text>
           </TouchableOpacity>
         </View>
       ) : filteredListings.length === 0 ? (
-        <Text style={styles.noDataText}>
-          {selectedCategory ? `No ads found in ${selectedCategory}.` : 'No ads posted yet. Be the first to post!'}
-        </Text>
+        <View style={styles.centerContainer}>
+          <Text style={styles.emptyEmoji}>📦</Text>
+          <Text style={styles.noDataText}>ఎలాంటి ప్రకటనలు దొరకలేదు.</Text>
+        </View>
       ) : (
         <FlatList
           data={filteredListings}
           renderItem={renderListingItem}
           keyExtractor={(item, index) => item.id || index.toString()}
+          numColumns={2}
+          columnWrapperStyle={styles.rowWrapper}
           contentContainerStyle={styles.verticalList}
+          showsVerticalScrollIndicator={false}
         />
       )}
     </View>
@@ -174,139 +165,157 @@ export default function MarketplaceScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 16,
-    paddingTop: 40,
+    backgroundColor: '#f4f6f8',
+    padding: 12,
+    paddingTop: 35,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#2e7d32',
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#666',
   },
   postAdButton: {
     backgroundColor: '#2e7d32',
     paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    elevation: 2,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    elevation: 3,
   },
   postAdButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 13,
   },
-  sectionHeader: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#444',
-    marginTop: 12,
-    marginBottom: 8,
+  searchInput: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    height: 42,
+    fontSize: 14,
+    marginBottom: 12,
+    elevation: 1,
   },
   horizontalList: {
     paddingVertical: 4,
+    marginBottom: 10,
   },
   categoryCard: {
     backgroundColor: '#fff',
-    paddingVertical: 8,
+    paddingVertical: 6,
     paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: 20,
     marginRight: 8,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#ddd',
     justifyContent: 'center',
     alignItems: 'center',
-    height: 40,
+    height: 36,
   },
   selectedCategoryCard: {
     backgroundColor: '#2e7d32',
     borderColor: '#2e7d32',
   },
   categoryTitle: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#2e7d32',
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#444',
   },
   selectedCategoryTitle: {
     color: '#fff',
   },
+  sectionHeader: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
   verticalList: {
     paddingBottom: 20,
   },
-  listingCard: {
+  rowWrapper: {
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  gridCard: {
     backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 14,
-    marginBottom: 10,
+    borderRadius: 10,
+    width: '48%',
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    elevation: 1,
+    borderColor: '#eee',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
   },
-  listingInfo: {
-    flex: 1,
+  cardImage: {
+    width: '100%',
+    height: 120,
+    backgroundColor: '#f0f0f0',
   },
-  jobBadge: {
-    alignSelf: 'flex-start',
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    marginBottom: 4,
+  noImageView: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  hiringBadge: {
-    backgroundColor: '#e8f5e9',
-  },
-  seekerBadge: {
-    backgroundColor: '#e3f2fd',
-  },
-  jobBadgeText: {
+  noImageText: {
     fontSize: 11,
-    fontWeight: 'bold',
-    color: '#2e7d32',
+    color: '#999',
   },
-  seekerBadgeText: {
-    color: '#1565c0',
+  cardContent: {
+    padding: 10,
   },
-  listingTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  listingPrice: {
+  cardPrice: {
     fontSize: 15,
     fontWeight: 'bold',
     color: '#2e7d32',
+    marginBottom: 2,
+  },
+  cardTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333',
     marginBottom: 4,
   },
-  listingCategory: {
-    fontSize: 12,
+  cardLocation: {
+    fontSize: 11,
     color: '#777',
+  },
+  centerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 50,
+  },
+  emptyEmoji: {
+    fontSize: 35,
+    marginBottom: 8,
   },
   noDataText: {
     textAlign: 'center',
-    color: '#777',
-    marginTop: 20,
-    fontSize: 14,
+    color: '#666',
+    fontSize: 13,
   },
   retryButton: {
     marginTop: 10,
     backgroundColor: '#2e7d32',
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 6,
   },
   retryButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 12,
   },
 });
