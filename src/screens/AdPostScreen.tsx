@@ -377,7 +377,7 @@ export default function AdPostScreen({ route, navigation }: any) {
           <Text style={styles.helperText}>Please select a category above to continue.</Text>
         ) : (
         <>
-        <Text style={styles.label}>Item Title *</Text>
+        <Text style={styles.label}>Ad Title *</Text>
         <TextInput
           style={styles.input}
           placeholder={titlePlaceholder}
