@@ -32,6 +32,13 @@ export default function AdPostScreen({ route, navigation }: any) {
   const [petAge, setPetAge] = useState('');
   const [serviceCategory, setServiceCategory] = useState('');
 
+  // Manual "Others" text entries — one per field that supports a custom typed value
+  const [customValues, setCustomValues] = useState<{ [key: string]: string }>({});
+  const isOther = (val: string) => val === 'Others' || val === 'Other';
+  const setCustomValue = (field: string, text: string) => {
+    setCustomValues(prev => ({ ...prev, [field]: text }));
+  };
+
   // Images state
   const [images, setImages] = useState<string[]>(['', '']);
   const [loading, setLoading] = useState(false);
@@ -53,64 +60,64 @@ export default function AdPostScreen({ route, navigation }: any) {
   // MODEL LISTS keyed by brand (dependent dropdown data)
   // ---------------------------------------------------------------------
   const mobileModels: { [key: string]: string[] } = {
-    'Apple': ['iPhone 16 Pro Max', 'iPhone 16 Pro', 'iPhone 16 Plus', 'iPhone 16', 'iPhone 16e', 'iPhone 15 Pro Max', 'iPhone 15 Pro', 'iPhone 15 Plus', 'iPhone 15', 'iPhone 14 Pro Max', 'iPhone 14 Pro', 'iPhone 14 Plus', 'iPhone 14', 'iPhone 13 Pro Max', 'iPhone 13 Pro', 'iPhone 13', 'iPhone 13 mini', 'iPhone 12 Pro Max', 'iPhone 12 Pro', 'iPhone 12', 'iPhone 12 mini', 'iPhone 11 Pro Max', 'iPhone 11 Pro', 'iPhone 11', 'iPhone SE (2022)', 'iPhone SE (2020)', 'iPhone XR', 'iPhone XS Max', 'iPhone XS', 'iPhone X'],
-    'Samsung': ['Galaxy S25 Ultra', 'Galaxy S25+', 'Galaxy S25', 'Galaxy S24 Ultra', 'Galaxy S24+', 'Galaxy S24', 'Galaxy S23 Ultra', 'Galaxy S23+', 'Galaxy S23', 'Galaxy S23 FE', 'Galaxy S22 Ultra', 'Galaxy S22+', 'Galaxy S22', 'Galaxy S21 Ultra', 'Galaxy S21+', 'Galaxy S21', 'Galaxy S21 FE', 'Galaxy Z Fold 5', 'Galaxy Z Fold 4', 'Galaxy Z Fold 3', 'Galaxy Z Flip 5', 'Galaxy Z Flip 4', 'Galaxy Z Flip 3', 'Galaxy A55', 'Galaxy A54', 'Galaxy A35', 'Galaxy A34', 'Galaxy A25', 'Galaxy A24', 'Galaxy A16', 'Galaxy A15', 'Galaxy A14', 'Galaxy A05', 'Galaxy M55', 'Galaxy M54', 'Galaxy M34', 'Galaxy M14', 'Galaxy F54', 'Galaxy F34', 'Galaxy F16'],
-    'Xiaomi/Redmi': ['Redmi Note 13 Pro+', 'Redmi Note 13 Pro', 'Redmi Note 13', 'Redmi Note 12 Pro+', 'Redmi Note 12 Pro', 'Redmi Note 12', 'Redmi Note 11 Pro', 'Redmi Note 11', 'Redmi 13C', 'Redmi 12C', 'Redmi 12', 'Xiaomi 14', 'Xiaomi 13 Pro', 'Xiaomi 13', 'Xiaomi 12', 'POCO X6 Pro', 'POCO X6', 'POCO X5 Pro', 'POCO F5', 'POCO F6', 'POCO M6 Pro'],
-    'OnePlus': ['OnePlus 12', 'OnePlus 12R', 'OnePlus 11', 'OnePlus 11R', 'OnePlus 10 Pro', 'OnePlus 10R', 'OnePlus 9 Pro', 'OnePlus 9', 'OnePlus 9R', 'Nord 4', 'Nord CE 4', 'Nord 3', 'Nord CE 3', 'Nord 2T', 'Nord 2'],
-    'Vivo': ['V30 Pro', 'V30', 'V29 Pro', 'V29', 'V27 Pro', 'V27', 'Y200', 'Y100', 'Y56', 'Y36', 'Y27', 'T3', 'T2', 'X100', 'X90'],
-    'Oppo': ['Reno 12 Pro', 'Reno 11 Pro', 'Reno 11', 'Reno 10 Pro+', 'Reno 10 Pro', 'Reno 8T', 'F25', 'F23', 'F21', 'A98', 'A78', 'A58', 'A38', 'A18'],
-    'Realme': ['Realme 12 Pro+', 'Realme 12 Pro', 'Realme 12', 'Realme 11 Pro+', 'Realme 11 Pro', 'Realme 11', 'GT 6', 'GT 5', 'Narzo 70 Pro', 'Narzo 60 Pro', 'Narzo 50', 'C67', 'C65', 'C55', 'C53'],
-    'Google': ['Pixel 9 Pro', 'Pixel 9', 'Pixel 8a', 'Pixel 8'],
-    'Motorola': ['Edge 50 Pro', 'Edge 50', 'Moto G85', 'Moto G73', 'Moto G54', 'Razr 50'],
-    'Others': ['Other / Not Listed'],
+    'Apple': ['iPhone 16 Pro Max', 'iPhone 16 Pro', 'iPhone 16 Plus', 'iPhone 16', 'iPhone 16e', 'iPhone 15 Pro Max', 'iPhone 15 Pro', 'iPhone 15 Plus', 'iPhone 15', 'iPhone 14 Pro Max', 'iPhone 14 Pro', 'iPhone 14 Plus', 'iPhone 14', 'iPhone 13 Pro Max', 'iPhone 13 Pro', 'iPhone 13', 'iPhone 13 mini', 'iPhone 12 Pro Max', 'iPhone 12 Pro', 'iPhone 12', 'iPhone 12 mini', 'iPhone 11 Pro Max', 'iPhone 11 Pro', 'iPhone 11', 'iPhone SE (2022)', 'iPhone SE (2020)', 'iPhone XR', 'iPhone XS Max', 'iPhone XS', 'iPhone X', 'Others'],
+    'Samsung': ['Galaxy S25 Ultra', 'Galaxy S25+', 'Galaxy S25', 'Galaxy S24 Ultra', 'Galaxy S24+', 'Galaxy S24', 'Galaxy S23 Ultra', 'Galaxy S23+', 'Galaxy S23', 'Galaxy S23 FE', 'Galaxy S22 Ultra', 'Galaxy S22+', 'Galaxy S22', 'Galaxy S21 Ultra', 'Galaxy S21+', 'Galaxy S21', 'Galaxy S21 FE', 'Galaxy Z Fold 5', 'Galaxy Z Fold 4', 'Galaxy Z Fold 3', 'Galaxy Z Flip 5', 'Galaxy Z Flip 4', 'Galaxy Z Flip 3', 'Galaxy A55', 'Galaxy A54', 'Galaxy A35', 'Galaxy A34', 'Galaxy A25', 'Galaxy A24', 'Galaxy A16', 'Galaxy A15', 'Galaxy A14', 'Galaxy A05', 'Galaxy M55', 'Galaxy M54', 'Galaxy M34', 'Galaxy M14', 'Galaxy F54', 'Galaxy F34', 'Galaxy F16', 'Others'],
+    'Xiaomi/Redmi': ['Redmi Note 13 Pro+', 'Redmi Note 13 Pro', 'Redmi Note 13', 'Redmi Note 12 Pro+', 'Redmi Note 12 Pro', 'Redmi Note 12', 'Redmi Note 11 Pro', 'Redmi Note 11', 'Redmi 13C', 'Redmi 12C', 'Redmi 12', 'Xiaomi 14', 'Xiaomi 13 Pro', 'Xiaomi 13', 'Xiaomi 12', 'POCO X6 Pro', 'POCO X6', 'POCO X5 Pro', 'POCO F5', 'POCO F6', 'POCO M6 Pro', 'Others'],
+    'OnePlus': ['OnePlus 12', 'OnePlus 12R', 'OnePlus 11', 'OnePlus 11R', 'OnePlus 10 Pro', 'OnePlus 10R', 'OnePlus 9 Pro', 'OnePlus 9', 'OnePlus 9R', 'Nord 4', 'Nord CE 4', 'Nord 3', 'Nord CE 3', 'Nord 2T', 'Nord 2', 'Others'],
+    'Vivo': ['V30 Pro', 'V30', 'V29 Pro', 'V29', 'V27 Pro', 'V27', 'Y200', 'Y100', 'Y56', 'Y36', 'Y27', 'T3', 'T2', 'X100', 'X90', 'Others'],
+    'Oppo': ['Reno 12 Pro', 'Reno 11 Pro', 'Reno 11', 'Reno 10 Pro+', 'Reno 10 Pro', 'Reno 8T', 'F25', 'F23', 'F21', 'A98', 'A78', 'A58', 'A38', 'A18', 'Others'],
+    'Realme': ['Realme 12 Pro+', 'Realme 12 Pro', 'Realme 12', 'Realme 11 Pro+', 'Realme 11 Pro', 'Realme 11', 'GT 6', 'GT 5', 'Narzo 70 Pro', 'Narzo 60 Pro', 'Narzo 50', 'C67', 'C65', 'C55', 'C53', 'Others'],
+    'Google': ['Pixel 9 Pro', 'Pixel 9', 'Pixel 8a', 'Pixel 8', 'Others'],
+    'Motorola': ['Edge 50 Pro', 'Edge 50', 'Moto G85', 'Moto G73', 'Moto G54', 'Razr 50', 'Others'],
+    'Others': ['Others'],
   };
 
   const laptopModels: { [key: string]: string[] } = {
-    'Dell': ['Inspiron 15', 'Inspiron 14', 'Inspiron 3000 series', 'Inspiron 5000 series', 'Inspiron 7000 series', 'Vostro', 'Latitude', 'XPS 13', 'XPS 15', 'Alienware'],
-    'HP': ['Pavilion', 'Pavilion Gaming', 'Envy', 'Omen', '15s', '14s', 'Victus', 'Spectre', 'ProBook', 'EliteBook'],
-    'Lenovo': ['IdeaPad Slim 3', 'IdeaPad Slim 5', 'ThinkPad E14', 'ThinkPad T14', 'ThinkPad X1 Carbon', 'Legion 5', 'Legion 7', 'Yoga series', 'V15'],
-    'Asus': ['VivoBook 15', 'VivoBook 14', 'Zenbook', 'ROG Strix', 'TUF Gaming', 'ExpertBook'],
-    'Acer': ['Aspire 3', 'Aspire 5', 'Aspire 7', 'Nitro 5', 'Predator', 'Swift', 'TravelMate'],
-    'Apple': ['MacBook Air M1', 'MacBook Air M2', 'MacBook Air M3', 'MacBook Pro 13"', 'MacBook Pro 14"', 'MacBook Pro 16"'],
-    'MSI': ['Modern 14', 'Katana', 'Cyborg'],
-    'Microsoft': ['Surface Laptop', 'Surface Pro'],
-    'Others': ['Other / Not Listed'],
+    'Dell': ['Inspiron 15', 'Inspiron 14', 'Inspiron 3000 series', 'Inspiron 5000 series', 'Inspiron 7000 series', 'Vostro', 'Latitude', 'XPS 13', 'XPS 15', 'Alienware', 'Others'],
+    'HP': ['Pavilion', 'Pavilion Gaming', 'Envy', 'Omen', '15s', '14s', 'Victus', 'Spectre', 'ProBook', 'EliteBook', 'Others'],
+    'Lenovo': ['IdeaPad Slim 3', 'IdeaPad Slim 5', 'ThinkPad E14', 'ThinkPad T14', 'ThinkPad X1 Carbon', 'Legion 5', 'Legion 7', 'Yoga series', 'V15', 'Others'],
+    'Asus': ['VivoBook 15', 'VivoBook 14', 'Zenbook', 'ROG Strix', 'TUF Gaming', 'ExpertBook', 'Others'],
+    'Acer': ['Aspire 3', 'Aspire 5', 'Aspire 7', 'Nitro 5', 'Predator', 'Swift', 'TravelMate', 'Others'],
+    'Apple': ['MacBook Air M1', 'MacBook Air M2', 'MacBook Air M3', 'MacBook Pro 13"', 'MacBook Pro 14"', 'MacBook Pro 16"', 'Others'],
+    'MSI': ['Modern 14', 'Katana', 'Cyborg', 'Others'],
+    'Microsoft': ['Surface Laptop', 'Surface Pro', 'Others'],
+    'Others': ['Others'],
   };
 
   const carModels: { [key: string]: string[] } = {
-    'Maruti Suzuki': ['Swift', 'Baleno', 'Dzire', 'Alto K10', 'WagonR', 'Celerio', 'Ignis', 'S-Presso', 'Fronx', 'Brezza', 'Ertiga', 'XL6', 'Grand Vitara', 'Ciaz', 'Eeco', 'Jimny', 'Invicto', 'Victoris', 'e-Vitara'],
-    'Hyundai': ['i10 Nios', 'i20', 'Aura', 'Verna', 'Venue', 'Creta', 'Alcazar', 'Tucson', 'Exter', 'Ioniq 5'],
-    'Tata': ['Tiago', 'Tigor', 'Altroz', 'Punch', 'Nexon', 'Harrier', 'Safari', 'Curvv', 'Nexon EV', 'Tigor EV', 'Sierra', 'Sierra EV', 'Harrier EV'],
-    'Honda': ['Amaze', 'City', 'Elevate', 'WR-V', 'Jazz', 'ZR-V'],
-    'Mahindra': ['Bolero', 'Bolero Neo', 'XUV300', 'XUV400', 'XUV700', 'Scorpio', 'Scorpio-N', 'Thar', 'Marazzo', 'KUV100', 'TUV300'],
-    'Toyota': ['Glanza', 'Urban Cruiser Taisor', 'Innova Crysta', 'Innova Hycross', 'Fortuner', 'Camry', 'Hyryder', 'Rumion', 'Hilux', 'Land Cruiser Prado'],
-    'Kia': ['Sonet', 'Seltos', 'Carens', 'EV6', 'Syros', 'Syros EV', 'Sorento'],
-    'Renault': ['Kwid', 'Triber', 'Kiger'],
-    'Volkswagen': ['Virtus', 'Taigun', 'Polo', 'Vento'],
-    'MG': ['Comet', 'Astor', 'Hector', 'Gloster', 'Windsor EV', 'ZS EV'],
-    'Skoda': ['Slavia', 'Kushaq', 'Kodiaq'],
-    'Citroen': ['C3', 'C3 Aircross', 'Basalt'],
-    'Nissan': ['Magnite', 'Tekton'],
-    'Jeep': ['Compass', 'Meridian'],
-    'BYD': ['Atto 3', 'Seal', 'e6'],
-    'Mercedes-Benz': ['C-Class', 'E-Class', 'GLC'],
-    'BMW': ['3 Series', '5 Series', 'X1'],
-    'Audi': ['A4', 'Q3', 'Q5'],
-    'Volvo': ['XC40', 'XC60'],
-    'Others': ['Other / Not Listed'],
+    'Maruti Suzuki': ['Swift', 'Baleno', 'Dzire', 'Alto K10', 'WagonR', 'Celerio', 'Ignis', 'S-Presso', 'Fronx', 'Brezza', 'Ertiga', 'XL6', 'Grand Vitara', 'Ciaz', 'Eeco', 'Jimny', 'Invicto', 'Victoris', 'e-Vitara', 'Others'],
+    'Hyundai': ['i10 Nios', 'i20', 'Aura', 'Verna', 'Venue', 'Creta', 'Alcazar', 'Tucson', 'Exter', 'Ioniq 5', 'Others'],
+    'Tata': ['Tiago', 'Tigor', 'Altroz', 'Punch', 'Nexon', 'Harrier', 'Safari', 'Curvv', 'Nexon EV', 'Tigor EV', 'Sierra', 'Sierra EV', 'Harrier EV', 'Others'],
+    'Honda': ['Amaze', 'City', 'Elevate', 'WR-V', 'Jazz', 'ZR-V', 'Others'],
+    'Mahindra': ['Bolero', 'Bolero Neo', 'XUV300', 'XUV400', 'XUV700', 'Scorpio', 'Scorpio-N', 'Thar', 'Marazzo', 'KUV100', 'TUV300', 'Others'],
+    'Toyota': ['Glanza', 'Urban Cruiser Taisor', 'Innova Crysta', 'Innova Hycross', 'Fortuner', 'Camry', 'Hyryder', 'Rumion', 'Hilux', 'Land Cruiser Prado', 'Others'],
+    'Kia': ['Sonet', 'Seltos', 'Carens', 'EV6', 'Syros', 'Syros EV', 'Sorento', 'Others'],
+    'Renault': ['Kwid', 'Triber', 'Kiger', 'Others'],
+    'Volkswagen': ['Virtus', 'Taigun', 'Polo', 'Vento', 'Others'],
+    'MG': ['Comet', 'Astor', 'Hector', 'Gloster', 'Windsor EV', 'ZS EV', 'Others'],
+    'Skoda': ['Slavia', 'Kushaq', 'Kodiaq', 'Others'],
+    'Citroen': ['C3', 'C3 Aircross', 'Basalt', 'Others'],
+    'Nissan': ['Magnite', 'Tekton', 'Others'],
+    'Jeep': ['Compass', 'Meridian', 'Others'],
+    'BYD': ['Atto 3', 'Seal', 'e6', 'Others'],
+    'Mercedes-Benz': ['C-Class', 'E-Class', 'GLC', 'Others'],
+    'BMW': ['3 Series', '5 Series', 'X1', 'Others'],
+    'Audi': ['A4', 'Q3', 'Q5', 'Others'],
+    'Volvo': ['XC40', 'XC60', 'Others'],
+    'Others': ['Others'],
   };
 
   const bikeModels: { [key: string]: string[] } = {
-    'Hero MotoCorp': ['Splendor Plus', 'Splendor+ XTEC', 'HF Deluxe', 'Passion Pro', 'Glamour', 'Xtreme 125R', 'Xtreme 160R', 'Xpulse 200', 'Karizma XMR', 'Destini 125', 'Pleasure+', 'Maestro Edge'],
-    'Honda': ['Shine 100', 'Shine 125', 'SP 125', 'Unicorn', 'Hornet 2.0', 'CB350', 'CB300F', 'Activa 6G', 'Activa 125', 'Dio'],
-    'Bajaj': ['Pulsar 125', 'Pulsar 150', 'Pulsar 220F', 'Pulsar NS200', 'Pulsar N250', 'Pulsar N160', 'Platina 100', 'Platina 110', 'CT 100', 'Avenger Street 160', 'Dominar 250', 'Dominar 400', 'Chetak (EV)'],
-    'TVS': ['Apache RTR 160', 'Apache RTR 180', 'Apache RTR 200 4V', 'Raider 125', 'Sport', 'Radeon', 'Star City+', 'Jupiter', 'NTorq 125', 'iQube (EV)'],
-    'Royal Enfield': ['Classic 350', 'Bullet 350', 'Meteor 350', 'Hunter 350', 'Himalayan 450', 'Continental GT 650', 'Interceptor 650', 'Scram 411', 'Guerrilla 450'],
-    'Yamaha': ['FZ-S', 'FZ25', 'MT-15', 'R15 V4', 'RayZR', 'Fascino'],
-    'Suzuki': ['Gixxer', 'Gixxer SF', 'Access 125', 'Burgman Street', 'Avenis'],
-    'Ola Electric': ['S1 Pro', 'S1 Air', 'S1X'],
-    'Ather': ['450X', '450S', 'Rizta'],
-    'Others': ['Other / Not Listed'],
+    'Hero MotoCorp': ['Splendor Plus', 'Splendor+ XTEC', 'HF Deluxe', 'Passion Pro', 'Glamour', 'Xtreme 125R', 'Xtreme 160R', 'Xpulse 200', 'Karizma XMR', 'Destini 125', 'Pleasure+', 'Maestro Edge', 'Others'],
+    'Honda': ['Shine 100', 'Shine 125', 'SP 125', 'Unicorn', 'Hornet 2.0', 'CB350', 'CB300F', 'Activa 6G', 'Activa 125', 'Dio', 'Others'],
+    'Bajaj': ['Pulsar 125', 'Pulsar 150', 'Pulsar 220F', 'Pulsar NS200', 'Pulsar N250', 'Pulsar N160', 'Platina 100', 'Platina 110', 'CT 100', 'Avenger Street 160', 'Dominar 250', 'Dominar 400', 'Chetak (EV)', 'Others'],
+    'TVS': ['Apache RTR 160', 'Apache RTR 180', 'Apache RTR 200 4V', 'Raider 125', 'Sport', 'Radeon', 'Star City+', 'Jupiter', 'NTorq 125', 'iQube (EV)', 'Others'],
+    'Royal Enfield': ['Classic 350', 'Bullet 350', 'Meteor 350', 'Hunter 350', 'Himalayan 450', 'Continental GT 650', 'Interceptor 650', 'Scram 411', 'Guerrilla 450', 'Others'],
+    'Yamaha': ['FZ-S', 'FZ25', 'MT-15', 'R15 V4', 'RayZR', 'Fascino', 'Others'],
+    'Suzuki': ['Gixxer', 'Gixxer SF', 'Access 125', 'Burgman Street', 'Avenis', 'Others'],
+    'Ola Electric': ['S1 Pro', 'S1 Air', 'S1X', 'Others'],
+    'Ather': ['450X', '450S', 'Rizta', 'Others'],
+    'Others': ['Others'],
   };
 
   // ---------------------------------------------------------------------
@@ -212,11 +219,28 @@ export default function AdPostScreen({ route, navigation }: any) {
     : isBike ? bikeModels
     : {};
 
-  const currentModelOptions = brand ? (currentModelMap[brand] || ['Other / Not Listed']) : [];
+  const currentModelOptions = brand ? (currentModelMap[brand] || ['Others']) : [];
 
   const handleSubmit = async () => {
     if (!title || !priceOrSalary) {
       Alert.alert('Error', 'Please enter item title and price/salary');
+      return;
+    }
+
+    // Resolve "Others" selections to whatever the user manually typed
+    const finalBrand = isOther(brand) ? (customValues.brand || '').trim() : brand;
+    const finalModel = isOther(model) ? (customValues.model || '').trim() : model;
+    const finalRam = isOther(ram) ? (customValues.ram || '').trim() : ram;
+    const finalStorage = isOther(storage) ? (customValues.storage || '').trim() : storage;
+    const finalSize = isOther(size) ? (customValues.size || '').trim() : size;
+    const finalPetBreed = isOther(petBreed) ? (customValues.petBreed || '').trim() : petBreed;
+
+    if ((isMobile || isCar || isBike || isLaptop) && isOther(brand) && !finalBrand) {
+      Alert.alert('Error', 'Please type the Brand name.');
+      return;
+    }
+    if ((isMobile || isCar || isBike || isLaptop) && isOther(model) && !finalModel) {
+      Alert.alert('Error', 'Please type the Model name.');
       return;
     }
 
@@ -232,13 +256,13 @@ export default function AdPostScreen({ route, navigation }: any) {
         category: categoryName,
         title,
         price: priceOrSalary,
-        brand,
-        model,
+        brand: finalBrand,
+        model: finalModel,
         location,
         description,
         attributes: {
-          ram,
-          storage,
+          ram: finalRam,
+          storage: finalStorage,
           fuelType,
           transmission,
           owners,
@@ -251,8 +275,8 @@ export default function AdPostScreen({ route, navigation }: any) {
           jobType,
           experience,
           condition,
-          size,
-          petBreed,
+          size: finalSize,
+          petBreed: finalPetBreed,
           petAge,
           serviceCategory,
         },
@@ -291,6 +315,15 @@ export default function AdPostScreen({ route, navigation }: any) {
             <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('brand', currentBrandList)}>
               <Text style={styles.dropdownButtonText}>{brand || 'Select Brand'}</Text>
             </TouchableOpacity>
+            {isOther(brand) && (
+              <TextInput
+                style={styles.input}
+                placeholder="Type Brand name (not in the list)"
+                placeholderTextColor="#888"
+                value={customValues.brand || ''}
+                onChangeText={(text) => setCustomValue('brand', text)}
+              />
+            )}
 
             <Text style={styles.label}>Model *</Text>
             <TouchableOpacity
@@ -302,6 +335,15 @@ export default function AdPostScreen({ route, navigation }: any) {
                 {model || (brand ? 'Select Model' : 'Select Brand First')}
               </Text>
             </TouchableOpacity>
+            {isOther(model) && (
+              <TextInput
+                style={styles.input}
+                placeholder="Type Model name (not in the list)"
+                placeholderTextColor="#888"
+                value={customValues.model || ''}
+                onChangeText={(text) => setCustomValue('model', text)}
+              />
+            )}
           </>
         )}
 
@@ -312,11 +354,29 @@ export default function AdPostScreen({ route, navigation }: any) {
             <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('ram', ramOptions)}>
               <Text style={styles.dropdownButtonText}>{ram || 'Select RAM'}</Text>
             </TouchableOpacity>
+            {isOther(ram) && (
+              <TextInput
+                style={styles.input}
+                placeholder="Type RAM size (e.g., 3GB)"
+                placeholderTextColor="#888"
+                value={customValues.ram || ''}
+                onChangeText={(text) => setCustomValue('ram', text)}
+              />
+            )}
 
             <Text style={styles.label}>Storage *</Text>
             <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('storage', storageOptions)}>
               <Text style={styles.dropdownButtonText}>{storage || 'Select Storage'}</Text>
             </TouchableOpacity>
+            {isOther(storage) && (
+              <TextInput
+                style={styles.input}
+                placeholder="Type Storage size (e.g., 16GB)"
+                placeholderTextColor="#888"
+                value={customValues.storage || ''}
+                onChangeText={(text) => setCustomValue('storage', text)}
+              />
+            )}
           </>
         )}
 
@@ -416,6 +476,15 @@ export default function AdPostScreen({ route, navigation }: any) {
             <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('size', sizeOptions)}>
               <Text style={styles.dropdownButtonText}>{size || 'Select Size'}</Text>
             </TouchableOpacity>
+            {isOther(size) && (
+              <TextInput
+                style={styles.input}
+                placeholder="Type Size (e.g., UK 9, 34 waist)"
+                placeholderTextColor="#888"
+                value={customValues.size || ''}
+                onChangeText={(text) => setCustomValue('size', text)}
+              />
+            )}
           </>
         )}
 
@@ -426,6 +495,15 @@ export default function AdPostScreen({ route, navigation }: any) {
             <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('petBreed', petBreedOptions)}>
               <Text style={styles.dropdownButtonText}>{petBreed || 'Select Breed'}</Text>
             </TouchableOpacity>
+            {isOther(petBreed) && (
+              <TextInput
+                style={styles.input}
+                placeholder="Type Breed name (not in the list)"
+                placeholderTextColor="#888"
+                value={customValues.petBreed || ''}
+                onChangeText={(text) => setCustomValue('petBreed', text)}
+              />
+            )}
 
             <Text style={styles.label}>Age</Text>
             <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('petAge', petAgeOptions)}>
