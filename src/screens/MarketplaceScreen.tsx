@@ -1,51 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { getDocuments } from '../services/firestoreService';
 
-export default function MarketplaceScreen() {
-  const { t } = useTranslation();
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+import React from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import { MARKET_CATEGORIES } from '../constants/marketCategories';
 
-  useEffect(() => {
-    fetchMarketplaceItems();
-  }, []);
-
-  const fetchMarketplaceItems = async () => {
-    try {
-      const data = await getDocuments('marketplaceItems');
-      setItems(data);
-    } catch (error) {
-      console.error("Error fetching marketplace items:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function MarketplaceScreen({ navigation }: any) {
+  const renderCategoryItem = ({ item }: any) => (
+    <TouchableOpacity 
+      style={styles.card}
+      onPress={() => navigation.navigate('AdPost', { categoryName: item.name })}
+    >
+      <Text style={styles.cardTitle}>{item.name}</Text>
+      <Text style={styles.subCount}>{item.subcategories.length} Subcategories</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t('marketplace')}</Text>
-      
-      {loading ? (
-        <ActivityIndicator size="large" color="#2e7d32" style={styles.loader} />
-      ) : items.length === 0 ? (
-        <View style={styles.center}>
-          <Text style={styles.noData}>No items available in marketplace yet.</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={items}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.itemCard}>
-              <Text style={styles.itemName}>{item.title || 'Scrap Item'}</Text>
-              <Text style={styles.itemPrice}>₹ {item.price || '0'}</Text>
-              <Text style={styles.itemDesc}>{item.description}</Text>
-            </View>
-          )}
-        />
-      )}
+      <Text style={styles.headerTitle}>Scrapo Marketplace</Text>
+      <Text style={styles.subtitle}>Explore categories or post your ad</Text>
+
+      <FlatList
+        data={MARKET_CATEGORIES}
+        renderItem={renderCategoryItem}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        contentContainerStyle={styles.listContainer}
+      />
     </View>
   );
 }
@@ -57,52 +37,42 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 40,
   },
-  title: {
-    fontSize: 22,
+  headerTitle: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
     marginBottom: 16,
   },
-  loader: {
+  listContainer: {
+    paddingBottom: 20,
+  },
+  card: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  noData: {
-    color: '#666',
-    fontSize: 16,
-  },
-  itemCard: {
     backgroundColor: '#fff',
-    borderRadius: 8,
+    margin: 6,
     padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
     elevation: 2,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    height: 100,
   },
-  itemName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  itemPrice: {
+  cardTitle: {
     fontSize: 14,
     fontWeight: 'bold',
     color: '#2e7d32',
-    marginTop: 4,
+    textAlign: 'center',
+    marginBottom: 4,
   },
-  itemDesc: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 6,
+  subCount: {
+    fontSize: 11,
+    color: '#888',
   },
 });
 
