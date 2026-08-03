@@ -4,14 +4,14 @@ import { addDocument } from '../services/firestoreService';
 
 export default function AdPostScreen({ route, navigation }: any) {
   const { categoryName } = route.params || { categoryName: 'Mobile Phones' };
-  
+
   const [title, setTitle] = useState('');
   const [priceOrSalary, setPriceOrSalary] = useState('');
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
   const [location, setLocation] = useState('Guntur, Andhra Pradesh');
   const [description, setDescription] = useState('');
-  
+
   // Dynamic fields
   const [ram, setRam] = useState('');
   const [storage, setStorage] = useState('');
@@ -19,11 +19,18 @@ export default function AdPostScreen({ route, navigation }: any) {
   const [transmission, setTransmission] = useState('');
   const [year, setYear] = useState('');
   const [kms, setKms] = useState('');
+  const [owners, setOwners] = useState('');
   const [bhk, setBhk] = useState('');
   const [area, setArea] = useState('');
   const [furnishing, setFurnishing] = useState('');
+  const [listingType, setListingType] = useState('');
   const [jobType, setJobType] = useState('');
+  const [experience, setExperience] = useState('');
   const [condition, setCondition] = useState('');
+  const [size, setSize] = useState('');
+  const [petBreed, setPetBreed] = useState('');
+  const [petAge, setPetAge] = useState('');
+  const [serviceCategory, setServiceCategory] = useState('');
 
   // Images state
   const [images, setImages] = useState<string[]>(['', '']);
@@ -34,16 +41,96 @@ export default function AdPostScreen({ route, navigation }: any) {
   const [modalType, setModalType] = useState('');
   const [modalData, setModalData] = useState<string[]>([]);
 
-  // Lists for selection
-  const brandList = ['Apple', 'Samsung', 'Xiaomi/Redmi', 'OnePlus', 'Vivo', 'Oppo', 'Realme', 'Maruti Suzuki', 'Hyundai', 'Tata', 'Mahindra', 'Honda', 'Hero', 'TVS', 'Royal Enfield', 'Yamaha', 'Sony', 'LG', 'Dell', 'HP', 'Lenovo', 'Others'];
-  const ramOptions = ['4GB', '6GB', '8GB', '12GB', '16GB', 'Other'];
-  const storageOptions = ['64GB', '128GB', '256GB', '512GB', '1TB', 'Other'];
+  // ---------------------------------------------------------------------
+  // BRAND LISTS (category-specific, no longer mixed together)
+  // ---------------------------------------------------------------------
+  const mobileBrandList = ['Apple', 'Samsung', 'Xiaomi/Redmi', 'OnePlus', 'Vivo', 'Oppo', 'Realme', 'Google', 'Motorola', 'Others'];
+  const laptopBrandList = ['Dell', 'HP', 'Lenovo', 'Asus', 'Acer', 'Apple', 'MSI', 'Microsoft', 'Others'];
+  const carBrandList = ['Maruti Suzuki', 'Hyundai', 'Tata', 'Honda', 'Mahindra', 'Toyota', 'Kia', 'Renault', 'Volkswagen', 'MG', 'Skoda', 'Citroen', 'Nissan', 'Jeep', 'BYD', 'Mercedes-Benz', 'BMW', 'Audi', 'Volvo', 'Others'];
+  const bikeBrandList = ['Hero MotoCorp', 'Honda', 'Bajaj', 'TVS', 'Royal Enfield', 'Yamaha', 'Suzuki', 'Ola Electric', 'Ather', 'Others'];
+
+  // ---------------------------------------------------------------------
+  // MODEL LISTS keyed by brand (dependent dropdown data)
+  // ---------------------------------------------------------------------
+  const mobileModels: { [key: string]: string[] } = {
+    'Apple': ['iPhone 16 Pro Max', 'iPhone 16 Pro', 'iPhone 16 Plus', 'iPhone 16', 'iPhone 16e', 'iPhone 15 Pro Max', 'iPhone 15 Pro', 'iPhone 15 Plus', 'iPhone 15', 'iPhone 14 Pro Max', 'iPhone 14 Pro', 'iPhone 14 Plus', 'iPhone 14', 'iPhone 13 Pro Max', 'iPhone 13 Pro', 'iPhone 13', 'iPhone 13 mini', 'iPhone 12 Pro Max', 'iPhone 12 Pro', 'iPhone 12', 'iPhone 12 mini', 'iPhone 11 Pro Max', 'iPhone 11 Pro', 'iPhone 11', 'iPhone SE (2022)', 'iPhone SE (2020)', 'iPhone XR', 'iPhone XS Max', 'iPhone XS', 'iPhone X'],
+    'Samsung': ['Galaxy S25 Ultra', 'Galaxy S25+', 'Galaxy S25', 'Galaxy S24 Ultra', 'Galaxy S24+', 'Galaxy S24', 'Galaxy S23 Ultra', 'Galaxy S23+', 'Galaxy S23', 'Galaxy S23 FE', 'Galaxy S22 Ultra', 'Galaxy S22+', 'Galaxy S22', 'Galaxy S21 Ultra', 'Galaxy S21+', 'Galaxy S21', 'Galaxy S21 FE', 'Galaxy Z Fold 5', 'Galaxy Z Fold 4', 'Galaxy Z Fold 3', 'Galaxy Z Flip 5', 'Galaxy Z Flip 4', 'Galaxy Z Flip 3', 'Galaxy A55', 'Galaxy A54', 'Galaxy A35', 'Galaxy A34', 'Galaxy A25', 'Galaxy A24', 'Galaxy A16', 'Galaxy A15', 'Galaxy A14', 'Galaxy A05', 'Galaxy M55', 'Galaxy M54', 'Galaxy M34', 'Galaxy M14', 'Galaxy F54', 'Galaxy F34', 'Galaxy F16'],
+    'Xiaomi/Redmi': ['Redmi Note 13 Pro+', 'Redmi Note 13 Pro', 'Redmi Note 13', 'Redmi Note 12 Pro+', 'Redmi Note 12 Pro', 'Redmi Note 12', 'Redmi Note 11 Pro', 'Redmi Note 11', 'Redmi 13C', 'Redmi 12C', 'Redmi 12', 'Xiaomi 14', 'Xiaomi 13 Pro', 'Xiaomi 13', 'Xiaomi 12', 'POCO X6 Pro', 'POCO X6', 'POCO X5 Pro', 'POCO F5', 'POCO F6', 'POCO M6 Pro'],
+    'OnePlus': ['OnePlus 12', 'OnePlus 12R', 'OnePlus 11', 'OnePlus 11R', 'OnePlus 10 Pro', 'OnePlus 10R', 'OnePlus 9 Pro', 'OnePlus 9', 'OnePlus 9R', 'Nord 4', 'Nord CE 4', 'Nord 3', 'Nord CE 3', 'Nord 2T', 'Nord 2'],
+    'Vivo': ['V30 Pro', 'V30', 'V29 Pro', 'V29', 'V27 Pro', 'V27', 'Y200', 'Y100', 'Y56', 'Y36', 'Y27', 'T3', 'T2', 'X100', 'X90'],
+    'Oppo': ['Reno 12 Pro', 'Reno 11 Pro', 'Reno 11', 'Reno 10 Pro+', 'Reno 10 Pro', 'Reno 8T', 'F25', 'F23', 'F21', 'A98', 'A78', 'A58', 'A38', 'A18'],
+    'Realme': ['Realme 12 Pro+', 'Realme 12 Pro', 'Realme 12', 'Realme 11 Pro+', 'Realme 11 Pro', 'Realme 11', 'GT 6', 'GT 5', 'Narzo 70 Pro', 'Narzo 60 Pro', 'Narzo 50', 'C67', 'C65', 'C55', 'C53'],
+    'Google': ['Pixel 9 Pro', 'Pixel 9', 'Pixel 8a', 'Pixel 8'],
+    'Motorola': ['Edge 50 Pro', 'Edge 50', 'Moto G85', 'Moto G73', 'Moto G54', 'Razr 50'],
+    'Others': ['Other / Not Listed'],
+  };
+
+  const laptopModels: { [key: string]: string[] } = {
+    'Dell': ['Inspiron 15', 'Inspiron 14', 'Inspiron 3000 series', 'Inspiron 5000 series', 'Inspiron 7000 series', 'Vostro', 'Latitude', 'XPS 13', 'XPS 15', 'Alienware'],
+    'HP': ['Pavilion', 'Pavilion Gaming', 'Envy', 'Omen', '15s', '14s', 'Victus', 'Spectre', 'ProBook', 'EliteBook'],
+    'Lenovo': ['IdeaPad Slim 3', 'IdeaPad Slim 5', 'ThinkPad E14', 'ThinkPad T14', 'ThinkPad X1 Carbon', 'Legion 5', 'Legion 7', 'Yoga series', 'V15'],
+    'Asus': ['VivoBook 15', 'VivoBook 14', 'Zenbook', 'ROG Strix', 'TUF Gaming', 'ExpertBook'],
+    'Acer': ['Aspire 3', 'Aspire 5', 'Aspire 7', 'Nitro 5', 'Predator', 'Swift', 'TravelMate'],
+    'Apple': ['MacBook Air M1', 'MacBook Air M2', 'MacBook Air M3', 'MacBook Pro 13"', 'MacBook Pro 14"', 'MacBook Pro 16"'],
+    'MSI': ['Modern 14', 'Katana', 'Cyborg'],
+    'Microsoft': ['Surface Laptop', 'Surface Pro'],
+    'Others': ['Other / Not Listed'],
+  };
+
+  const carModels: { [key: string]: string[] } = {
+    'Maruti Suzuki': ['Swift', 'Baleno', 'Dzire', 'Alto K10', 'WagonR', 'Celerio', 'Ignis', 'S-Presso', 'Fronx', 'Brezza', 'Ertiga', 'XL6', 'Grand Vitara', 'Ciaz', 'Eeco', 'Jimny', 'Invicto', 'Victoris', 'e-Vitara'],
+    'Hyundai': ['i10 Nios', 'i20', 'Aura', 'Verna', 'Venue', 'Creta', 'Alcazar', 'Tucson', 'Exter', 'Ioniq 5'],
+    'Tata': ['Tiago', 'Tigor', 'Altroz', 'Punch', 'Nexon', 'Harrier', 'Safari', 'Curvv', 'Nexon EV', 'Tigor EV', 'Sierra', 'Sierra EV', 'Harrier EV'],
+    'Honda': ['Amaze', 'City', 'Elevate', 'WR-V', 'Jazz', 'ZR-V'],
+    'Mahindra': ['Bolero', 'Bolero Neo', 'XUV300', 'XUV400', 'XUV700', 'Scorpio', 'Scorpio-N', 'Thar', 'Marazzo', 'KUV100', 'TUV300'],
+    'Toyota': ['Glanza', 'Urban Cruiser Taisor', 'Innova Crysta', 'Innova Hycross', 'Fortuner', 'Camry', 'Hyryder', 'Rumion', 'Hilux', 'Land Cruiser Prado'],
+    'Kia': ['Sonet', 'Seltos', 'Carens', 'EV6', 'Syros', 'Syros EV', 'Sorento'],
+    'Renault': ['Kwid', 'Triber', 'Kiger'],
+    'Volkswagen': ['Virtus', 'Taigun', 'Polo', 'Vento'],
+    'MG': ['Comet', 'Astor', 'Hector', 'Gloster', 'Windsor EV', 'ZS EV'],
+    'Skoda': ['Slavia', 'Kushaq', 'Kodiaq'],
+    'Citroen': ['C3', 'C3 Aircross', 'Basalt'],
+    'Nissan': ['Magnite', 'Tekton'],
+    'Jeep': ['Compass', 'Meridian'],
+    'BYD': ['Atto 3', 'Seal', 'e6'],
+    'Mercedes-Benz': ['C-Class', 'E-Class', 'GLC'],
+    'BMW': ['3 Series', '5 Series', 'X1'],
+    'Audi': ['A4', 'Q3', 'Q5'],
+    'Volvo': ['XC40', 'XC60'],
+    'Others': ['Other / Not Listed'],
+  };
+
+  const bikeModels: { [key: string]: string[] } = {
+    'Hero MotoCorp': ['Splendor Plus', 'Splendor+ XTEC', 'HF Deluxe', 'Passion Pro', 'Glamour', 'Xtreme 125R', 'Xtreme 160R', 'Xpulse 200', 'Karizma XMR', 'Destini 125', 'Pleasure+', 'Maestro Edge'],
+    'Honda': ['Shine 100', 'Shine 125', 'SP 125', 'Unicorn', 'Hornet 2.0', 'CB350', 'CB300F', 'Activa 6G', 'Activa 125', 'Dio'],
+    'Bajaj': ['Pulsar 125', 'Pulsar 150', 'Pulsar 220F', 'Pulsar NS200', 'Pulsar N250', 'Pulsar N160', 'Platina 100', 'Platina 110', 'CT 100', 'Avenger Street 160', 'Dominar 250', 'Dominar 400', 'Chetak (EV)'],
+    'TVS': ['Apache RTR 160', 'Apache RTR 180', 'Apache RTR 200 4V', 'Raider 125', 'Sport', 'Radeon', 'Star City+', 'Jupiter', 'NTorq 125', 'iQube (EV)'],
+    'Royal Enfield': ['Classic 350', 'Bullet 350', 'Meteor 350', 'Hunter 350', 'Himalayan 450', 'Continental GT 650', 'Interceptor 650', 'Scram 411', 'Guerrilla 450'],
+    'Yamaha': ['FZ-S', 'FZ25', 'MT-15', 'R15 V4', 'RayZR', 'Fascino'],
+    'Suzuki': ['Gixxer', 'Gixxer SF', 'Access 125', 'Burgman Street', 'Avenis'],
+    'Ola Electric': ['S1 Pro', 'S1 Air', 'S1X'],
+    'Ather': ['450X', '450S', 'Rizta'],
+    'Others': ['Other / Not Listed'],
+  };
+
+  // ---------------------------------------------------------------------
+  // OTHER OPTION LISTS
+  // ---------------------------------------------------------------------
+  const ramOptions = ['2GB', '4GB', '6GB', '8GB', '12GB', '16GB', '32GB+', 'Other'];
+  const storageOptions = ['32GB', '64GB', '128GB', '256GB', '512GB', '1TB', '2TB+', 'Other'];
   const fuelOptions = ['Petrol', 'Diesel', 'CNG', 'Electric', 'Hybrid'];
   const transmissionOptions = ['Manual', 'Automatic'];
-  const bhkOptions = ['1 BHK', '2 BHK', '3 BHK', '4+ BHK', 'Villa / Plot'];
+  const ownersOptions = ['1st Owner', '2nd Owner', '3rd Owner', '3+ Owners'];
+  const listingTypeOptions = ['Sell', 'Rent', 'PG'];
+  const bhkOptions = ['1 BHK', '2 BHK', '3 BHK', '4 BHK', '4+ BHK', 'Villa / Plot'];
   const furnishingOptions = ['Furnished', 'Semi-Furnished', 'Unfurnished'];
-  const jobTypeList = ['Full-time', 'Part-time', 'Work from Home', 'Freelance'];
-  const conditionList = ['New', 'Like New', 'Good', 'Fair', 'Needs Repair'];
+  const jobTypeList = ['Full-time', 'Part-time', 'Internship', 'Work from Home', 'Freelance'];
+  const experienceOptions = ['Fresher', '1-3 yrs', '3-5 yrs', '5+ yrs'];
+  const conditionList = ['New', 'Excellent', 'Good', 'Fair', 'Needs Repair'];
+  const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size', 'Other'];
+  const petBreedOptions = ['Labrador', 'German Shepherd', 'Golden Retriever', 'Pug', 'Beagle', 'Pomeranian', 'Shih Tzu', 'Rottweiler', 'Dobermann', 'Husky', 'Indie/Mixed Breed', 'Persian Cat', 'Siamese Cat', 'Indie Cat', 'Parrot', 'Love Bird', 'Other'];
+  const petAgeOptions = ['< 3 months', '3-12 months', '1-3 yrs', '3+ yrs'];
+  const serviceCategoryOptions = ['Education', 'Repair Services', 'Beauty & Wellness', 'Travel', 'Legal / Documents', 'Home Renovation'];
 
   const openModal = (type: string, data: string[]) => {
     setModalType(type);
@@ -52,15 +139,26 @@ export default function AdPostScreen({ route, navigation }: any) {
   };
 
   const handleSelectModalItem = (item: string) => {
-    if (modalType === 'brand') setBrand(item);
+    if (modalType === 'brand') {
+      setBrand(item);
+      setModel(''); // reset dependent model when brand changes
+    }
+    else if (modalType === 'model') setModel(item);
     else if (modalType === 'ram') setRam(item);
     else if (modalType === 'storage') setStorage(item);
     else if (modalType === 'fuel') setFuelType(item);
     else if (modalType === 'transmission') setTransmission(item);
+    else if (modalType === 'owners') setOwners(item);
+    else if (modalType === 'listingType') setListingType(item);
     else if (modalType === 'bhk') setBhk(item);
     else if (modalType === 'furnishing') setFurnishing(item);
     else if (modalType === 'jobType') setJobType(item);
+    else if (modalType === 'experience') setExperience(item);
     else if (modalType === 'condition') setCondition(item);
+    else if (modalType === 'size') setSize(item);
+    else if (modalType === 'petBreed') setPetBreed(item);
+    else if (modalType === 'petAge') setPetAge(item);
+    else if (modalType === 'serviceCategory') setServiceCategory(item);
     setModalVisible(false);
   };
 
@@ -86,6 +184,36 @@ export default function AdPostScreen({ route, navigation }: any) {
     ]);
   };
 
+  // ---------------------------------------------------------------------
+  // CATEGORY DETECTION
+  // ---------------------------------------------------------------------
+  const catLower = categoryName.toLowerCase();
+  const isMobile = catLower.includes('mobile');
+  const isCar = catLower.includes('car');
+  const isBike = catLower.includes('bike') || catLower.includes('motorcycle');
+  const isProperty = catLower.includes('propert');
+  const isJob = catLower.includes('job');
+  const isLaptop = catLower.includes('laptop') || catLower.includes('computer');
+  const isFashion = catLower.includes('fashion') || catLower.includes('cloth');
+  const isPet = catLower.includes('pet');
+  const isService = catLower.includes('service');
+  const needsCondition = isMobile || isLaptop || catLower.includes('electro') || catLower.includes('furnitur') || isFashion;
+
+  // pick correct brand/model list for the current category
+  const currentBrandList = isMobile ? mobileBrandList
+    : isLaptop ? laptopBrandList
+    : isCar ? carBrandList
+    : isBike ? bikeBrandList
+    : [];
+
+  const currentModelMap = isMobile ? mobileModels
+    : isLaptop ? laptopModels
+    : isCar ? carModels
+    : isBike ? bikeModels
+    : {};
+
+  const currentModelOptions = brand ? (currentModelMap[brand] || ['Other / Not Listed']) : [];
+
   const handleSubmit = async () => {
     if (!title || !priceOrSalary) {
       Alert.alert('Error', 'Please enter item title and price/salary');
@@ -93,7 +221,7 @@ export default function AdPostScreen({ route, navigation }: any) {
     }
 
     const validImages = images.filter(img => img.trim() !== '');
-    if (!isJob && validImages.length < 2) {
+    if (!isJob && !isService && validImages.length < 2) {
       Alert.alert('Error', 'Please provide at least 2 product images.');
       return;
     }
@@ -113,13 +241,20 @@ export default function AdPostScreen({ route, navigation }: any) {
           storage,
           fuelType,
           transmission,
+          owners,
           year,
           kms,
+          listingType,
           bhk,
           area,
           furnishing,
           jobType,
+          experience,
           condition,
+          size,
+          petBreed,
+          petAge,
+          serviceCategory,
         },
         images: validImages,
         status: 'Active',
@@ -135,19 +270,10 @@ export default function AdPostScreen({ route, navigation }: any) {
     }
   };
 
-  const catLower = categoryName.toLowerCase();
-  const isMobile = catLower.includes('mobile');
-  const isCar = catLower.includes('car');
-  const isBike = catLower.includes('bike');
-  const isProperty = catLower.includes('propert');
-  const isJob = catLower.includes('job');
-  const isLaptop = catLower.includes('laptop');
-  const needsCondition = isMobile || isLaptop || catLower.includes('electro') || catLower.includes('furnitur');
-
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Post Ad: {categoryName}</Text>
-      
+
       <View style={styles.form}>
         <Text style={styles.label}>Item Title *</Text>
         <TextInput
@@ -158,26 +284,28 @@ export default function AdPostScreen({ route, navigation }: any) {
           onChangeText={setTitle}
         />
 
-        {/* Brand */}
+        {/* Brand + dependent Model (Mobile / Laptop / Car / Bike) */}
         {(isMobile || isCar || isBike || isLaptop) && (
           <>
             <Text style={styles.label}>Brand *</Text>
-            <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('brand', brandList)}>
+            <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('brand', currentBrandList)}>
               <Text style={styles.dropdownButtonText}>{brand || 'Select Brand'}</Text>
             </TouchableOpacity>
 
             <Text style={styles.label}>Model *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g., iPhone 15 Pro / Classic 350 / Inspiron 15"
-              placeholderTextColor="#888"
-              value={model}
-              onChangeText={setModel}
-            />
+            <TouchableOpacity
+              style={[styles.dropdownButton, !brand && styles.disabledInput]}
+              disabled={!brand}
+              onPress={() => openModal('model', currentModelOptions)}
+            >
+              <Text style={styles.dropdownButtonText}>
+                {model || (brand ? 'Select Model' : 'Select Brand First')}
+              </Text>
+            </TouchableOpacity>
           </>
         )}
 
-        {/* Mobile Specific (No Variant, only Model & RAM & Storage) */}
+        {/* Mobile Specific */}
         {isMobile && (
           <>
             <Text style={styles.label}>RAM *</Text>
@@ -209,6 +337,11 @@ export default function AdPostScreen({ route, navigation }: any) {
               </>
             )}
 
+            <Text style={styles.label}>Owners</Text>
+            <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('owners', ownersOptions)}>
+              <Text style={styles.dropdownButtonText}>{owners || 'Select Owners'}</Text>
+            </TouchableOpacity>
+
             <Text style={styles.label}>Manufacturing Year</Text>
             <TextInput
               style={styles.input}
@@ -234,6 +367,11 @@ export default function AdPostScreen({ route, navigation }: any) {
         {/* Property */}
         {isProperty && (
           <>
+            <Text style={styles.label}>Listing Type *</Text>
+            <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('listingType', listingTypeOptions)}>
+              <Text style={styles.dropdownButtonText}>{listingType || 'Select Listing Type'}</Text>
+            </TouchableOpacity>
+
             <Text style={styles.label}>BHK Type *</Text>
             <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('bhk', bhkOptions)}>
               <Text style={styles.dropdownButtonText}>{bhk || 'Select BHK'}</Text>
@@ -256,17 +394,62 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        {/* Jobs (Salary instead of Price) */}
+        {/* Jobs */}
         {isJob && (
           <>
             <Text style={styles.label}>Job Type *</Text>
             <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('jobType', jobTypeList)}>
               <Text style={styles.dropdownButtonText}>{jobType || 'Select Job Type'}</Text>
             </TouchableOpacity>
+
+            <Text style={styles.label}>Experience Required</Text>
+            <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('experience', experienceOptions)}>
+              <Text style={styles.dropdownButtonText}>{experience || 'Select Experience'}</Text>
+            </TouchableOpacity>
           </>
         )}
 
-        {/* Condition */}
+        {/* Fashion */}
+        {isFashion && (
+          <>
+            <Text style={styles.label}>Size *</Text>
+            <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('size', sizeOptions)}>
+              <Text style={styles.dropdownButtonText}>{size || 'Select Size'}</Text>
+            </TouchableOpacity>
+          </>
+        )}
+
+        {/* Pets */}
+        {isPet && (
+          <>
+            <Text style={styles.label}>Breed *</Text>
+            <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('petBreed', petBreedOptions)}>
+              <Text style={styles.dropdownButtonText}>{petBreed || 'Select Breed'}</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.label}>Age</Text>
+            <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('petAge', petAgeOptions)}>
+              <Text style={styles.dropdownButtonText}>{petAge || 'Select Age'}</Text>
+            </TouchableOpacity>
+          </>
+        )}
+
+        {/* Services */}
+        {isService && (
+          <>
+            <Text style={styles.label}>Service Category *</Text>
+            <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('serviceCategory', serviceCategoryOptions)}>
+              <Text style={styles.dropdownButtonText}>{serviceCategory || 'Select Service Category'}</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.label}>Experience</Text>
+            <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('experience', experienceOptions)}>
+              <Text style={styles.dropdownButtonText}>{experience || 'Select Experience'}</Text>
+            </TouchableOpacity>
+          </>
+        )}
+
+        {/* Condition (Mobile / Laptop / Electronics / Furniture / Fashion) */}
         {needsCondition && (
           <>
             <Text style={styles.label}>Condition</Text>
@@ -294,8 +477,8 @@ export default function AdPostScreen({ route, navigation }: any) {
           editable={false}
         />
 
-        {/* Images (Not strictly required for Jobs) */}
-        {!isJob && (
+        {/* Images (Not strictly required for Jobs/Services) */}
+        {!isJob && !isService && (
           <>
             <Text style={styles.label}>Product Images (Min 2, Max 10 Required)</Text>
             {images.map((img, index) => (
@@ -332,7 +515,7 @@ export default function AdPostScreen({ route, navigation }: any) {
           onChangeText={setDescription}
         />
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.button}
           onPress={handleSubmit}
           disabled={loading}
@@ -395,4 +578,3 @@ const styles = StyleSheet.create({
   closeModalBtn: { marginTop: 12, paddingVertical: 12, backgroundColor: '#f44336', borderRadius: 8, alignItems: 'center' },
   closeModalText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });
-
