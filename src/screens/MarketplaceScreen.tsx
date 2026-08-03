@@ -51,7 +51,14 @@ export default function MarketplaceScreen({ navigation }: any) {
   };
 
   const handlePostAdPress = () => {
-    navigation.navigate('AdPost', { categoryName: 'Mobile Phones' });
+    // If the user has already picked a category on this screen, carry it
+    // over to the Post Ad form. Otherwise don't force a category — let the
+    // AdPost screen show its own category selector.
+    if (selectedCategory) {
+      navigation.navigate('AdPost', { categoryName: selectedCategory });
+    } else {
+      navigation.navigate('AdPost');
+    }
   };
 
   const renderCategoryItem = ({ item }: any) => {
