@@ -3,7 +3,6 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  FlatList, 
   TouchableOpacity, 
   ActivityIndicator, 
   Alert,
@@ -24,15 +23,12 @@ export default function ProfileScreen({ navigation }: any) {
   const [userListings, setUserListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // ప్రొఫైల్ ఎడిటింగ్ స్టేట్స్
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [photoURL, setPhotoURL] = useState('');
   const [updating, setUpdating] = useState(false);
 
-  // గ్రీన్ కాయిన్స్ & రెఫరల్ స్టేట్
   const [greenCoins, setGreenCoins] = useState(150);
-
   const currentUser = auth.currentUser;
 
   const fetchUserDataAndListings = async () => {
@@ -152,32 +148,10 @@ export default function ProfileScreen({ navigation }: any) {
     );
   };
 
-  const renderItem = ({ item }: any) => (
-    <View style={styles.listingCard}>
-      <View style={styles.listingInfo}>
-        <Text style={styles.listingTitle} numberOfLines={1}>{item.title}</Text>
-        <Text style={styles.listingPrice}>₹ {item.price || item.expectedSalary || 'N/A'}</Text>
-        <View style={styles.badgeContainer}>
-          <Text style={styles.listingCategory}>{item.category}</Text>
-          <Text style={styles.listingDate}>
-            {item.createdAt ? new Date(item.createdAt.seconds * 1000).toLocaleDateString() : 'Recent'}
-          </Text>
-        </View>
-      </View>
-      <TouchableOpacity 
-        style={styles.deleteButton} 
-        onPress={() => handleDeleteListing(item.id)}
-      >
-        <Text style={styles.deleteButtonText}>Delete</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="#fff" barStyle="dark-content" />
       
-      {/* టాప్ నావ్‌బಾರ್ */}
       <View style={styles.topNav}>
         <Text style={styles.profileHeaderTitle}>Profile</Text>
         <TouchableOpacity>
@@ -187,7 +161,6 @@ export default function ProfileScreen({ navigation }: any) {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
         
-        {/* ప్రొఫైల్ మెయిన్ కార్డ్ */}
         <View style={styles.headerCard}>
           <View style={styles.profileTopRow}>
             <View style={styles.avatarContainer}>
@@ -224,7 +197,6 @@ export default function ProfileScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
 
-          {/* 4 స్టాట్స్ బాక్సెస్ */}
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
               <Ionicons name="document-text-outline" size={18} color="#2e7d32" />
@@ -252,7 +224,6 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* 🌿 Green Coins Banner */}
         <View style={styles.coinCard}>
           <View style={styles.coinInfo}>
             <Text style={styles.coinTitle}>My Green Coins</Text>
@@ -265,7 +236,6 @@ export default function ProfileScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        {/* సహాయం & సపోర్ట్ సెక్షన్ */}
         <View style={styles.supportCard}>
           <View>
             <Text style={styles.supportTitle}>Help & Support</Text>
@@ -275,7 +245,6 @@ export default function ProfileScreen({ navigation }: any) {
           <Ionicons name="chevron-forward" size={18} color="#666" />
         </View>
 
-        {/* My Posted Ads Section */}
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>My Posted Ads</Text>
           <TouchableOpacity>
@@ -296,15 +265,28 @@ export default function ProfileScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
         ) : (
-          <FlatList
-            data={userListings}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            scrollEnabled={false}
-          />
+          userListings.map((item) => (
+            <View key={item.id} style={styles.listingCard}>
+              <View style={styles.listingInfo}>
+                <Text style={styles.listingTitle} numberOfLines={1}>{item.title}</Text>
+                <Text style={styles.listingPrice}>₹ {item.price || item.expectedSalary || 'N/A'}</Text>
+                <View style={styles.badgeContainer}>
+                  <Text style={styles.listingCategory}>{item.category}</Text>
+                  <Text style={styles.listingDate}>
+                    {item.createdAt ? new Date(item.createdAt.seconds * 1000).toLocaleDateString() : 'Recent'}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity 
+                style={styles.deleteButton} 
+                onPress={() => handleDeleteListing(item.id)}
+              >
+                <Text style={styles.deleteButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          ))
         )}
 
-        {/* Account Settings List */}
         <Text style={styles.sectionTitleAccount}>Account</Text>
         <View style={styles.accountCard}>
           <TouchableOpacity style={styles.accountItem}>
@@ -348,7 +330,6 @@ export default function ProfileScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={18} color="#c62828" style={{ marginRight: 6 }} />
           <Text style={styles.logoutText}>Logout</Text>
@@ -356,7 +337,6 @@ export default function ProfileScreen({ navigation }: any) {
 
       </ScrollView>
 
-      {/* ప్రొఫైల్ ఎడిట్ మోడల్ */}
       <Modal
         visible={isEditModalVisible}
         animationType="slide"
