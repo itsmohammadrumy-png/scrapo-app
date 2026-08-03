@@ -3,16 +3,16 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView,
 import { addDocument } from '../services/firestoreService';
 
 export default function AdPostScreen({ route, navigation }: any) {
-  const { categoryName } = route.params || { categoryName: 'Mobiles & Tablets' };
+  const { categoryName } = route.params || { categoryName: 'Mobile Phones' };
   
   const [title, setTitle] = useState('');
-  const [price, setPrice] = useState('');
+  const [priceOrSalary, setPriceOrSalary] = useState('');
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
   const [location, setLocation] = useState('Guntur, Andhra Pradesh');
   const [description, setDescription] = useState('');
   
-  // Dynamic specs across all categories
+  // Dynamic fields
   const [ram, setRam] = useState('');
   const [storage, setStorage] = useState('');
   const [fuelType, setFuelType] = useState('');
@@ -23,7 +23,6 @@ export default function AdPostScreen({ route, navigation }: any) {
   const [area, setArea] = useState('');
   const [furnishing, setFurnishing] = useState('');
   const [jobType, setJobType] = useState('');
-  const [salaryRange, setSalaryRange] = useState('');
   const [condition, setCondition] = useState('');
 
   // Images state
@@ -35,8 +34,8 @@ export default function AdPostScreen({ route, navigation }: any) {
   const [modalType, setModalType] = useState('');
   const [modalData, setModalData] = useState<string[]>([]);
 
-  // Category specific lists for floating modals
-  const brandList = ['Apple', 'Samsung', 'Xiaomi/Redmi', 'OnePlus', 'Vivo', 'Oppo', 'Realme', 'Maruti Suzuki', 'Hyundai', 'Tata', 'Mahindra', 'Honda', 'Hero', 'TVS', 'Royal Enfield', 'Yamaha', 'Sony', 'LG', 'IKEA', 'Nike', 'Adidas', 'Others'];
+  // Lists for selection
+  const brandList = ['Apple', 'Samsung', 'Xiaomi/Redmi', 'OnePlus', 'Vivo', 'Oppo', 'Realme', 'Maruti Suzuki', 'Hyundai', 'Tata', 'Mahindra', 'Honda', 'Hero', 'TVS', 'Royal Enfield', 'Yamaha', 'Sony', 'LG', 'Dell', 'HP', 'Lenovo', 'Others'];
   const ramOptions = ['4GB', '6GB', '8GB', '12GB', '16GB', 'Other'];
   const storageOptions = ['64GB', '128GB', '256GB', '512GB', '1TB', 'Other'];
   const fuelOptions = ['Petrol', 'Diesel', 'CNG', 'Electric', 'Hybrid'];
@@ -80,7 +79,7 @@ export default function AdPostScreen({ route, navigation }: any) {
   };
 
   const handlePickFromGallery = (index: number) => {
-    Alert.alert('Gallery / Camera', 'Select image source', [
+    Alert.alert('Image Upload', 'Select image source', [
       { text: 'Camera', onPress: () => handleImageChange('camera_captured_image.jpg', index) },
       { text: 'Gallery', onPress: () => handleImageChange('gallery_selected_image.jpg', index) },
       { text: 'Cancel', style: 'cancel' }
@@ -88,14 +87,14 @@ export default function AdPostScreen({ route, navigation }: any) {
   };
 
   const handleSubmit = async () => {
-    if (!title || !price) {
-      Alert.alert('Error', 'Please enter item title and price');
+    if (!title || !priceOrSalary) {
+      Alert.alert('Error', 'Please enter item title and price/salary');
       return;
     }
 
     const validImages = images.filter(img => img.trim() !== '');
-    if (validImages.length < 2) {
-      Alert.alert('Error', 'Please provide at least 2 images.');
+    if (!isJob && validImages.length < 2) {
+      Alert.alert('Error', 'Please provide at least 2 product images.');
       return;
     }
 
@@ -104,7 +103,7 @@ export default function AdPostScreen({ route, navigation }: any) {
       await addDocument('marketplaceListings', {
         category: categoryName,
         title,
-        price,
+        price: priceOrSalary,
         brand,
         model,
         location,
@@ -120,7 +119,6 @@ export default function AdPostScreen({ route, navigation }: any) {
           area,
           furnishing,
           jobType,
-          salaryRange,
           condition,
         },
         images: validImages,
@@ -143,7 +141,8 @@ export default function AdPostScreen({ route, navigation }: any) {
   const isBike = catLower.includes('bike');
   const isProperty = catLower.includes('propert');
   const isJob = catLower.includes('job');
-  const needsCondition = isMobile || catLower.includes('electro') || catLower.includes('furnitur') || catLower.includes('books') || catLower.includes('fashion');
+  const isLaptop = catLower.includes('laptop');
+  const needsCondition = isMobile || isLaptop || catLower.includes('electro') || catLower.includes('furnitur');
 
   return (
     <ScrollView style={styles.container}>
@@ -153,24 +152,24 @@ export default function AdPostScreen({ route, navigation }: any) {
         <Text style={styles.label}>Item Title *</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g., iPhone 15 / Honda City / Data Entry Role"
+          placeholder="e.g., iPhone 15 / Honda City / Data Entry Executive"
           placeholderTextColor="#888"
           value={title}
           onChangeText={setTitle}
         />
 
-        {/* Brand Selector for Mobiles, Cars, Bikes, etc. */}
-        {(isMobile || isCar || isBike) && (
+        {/* Brand */}
+        {(isMobile || isCar || isBike || isLaptop) && (
           <>
             <Text style={styles.label}>Brand *</Text>
             <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('brand', brandList)}>
               <Text style={styles.dropdownButtonText}>{brand || 'Select Brand'}</Text>
             </TouchableOpacity>
 
-            <Text style={styles.label}>Model / Variant</Text>
+            <Text style={styles.label}>Model *</Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g., Pro Max / ZXI / Classic 350"
+              placeholder="e.g., iPhone 15 Pro / Classic 350 / Inspiron 15"
               placeholderTextColor="#888"
               value={model}
               onChangeText={setModel}
@@ -178,7 +177,7 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        {/* Mobiles Specific */}
+        {/* Mobile Specific (No Variant, only Model & RAM & Storage) */}
         {isMobile && (
           <>
             <Text style={styles.label}>RAM *</Text>
@@ -193,7 +192,7 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        {/* Cars & Bikes Specific */}
+        {/* Cars & Bikes */}
         {(isCar || isBike) && (
           <>
             {isCar && (
@@ -232,7 +231,7 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        {/* Properties Specific */}
+        {/* Property */}
         {isProperty && (
           <>
             <Text style={styles.label}>BHK Type *</Text>
@@ -257,26 +256,17 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        {/* Jobs Specific */}
+        {/* Jobs (Salary instead of Price) */}
         {isJob && (
           <>
             <Text style={styles.label}>Job Type *</Text>
             <TouchableOpacity style={styles.dropdownButton} onPress={() => openModal('jobType', jobTypeList)}>
               <Text style={styles.dropdownButtonText}>{jobType || 'Select Job Type'}</Text>
             </TouchableOpacity>
-
-            <Text style={styles.label}>Salary / Pay Range</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g., 15,000 - 25,000 per month"
-              placeholderTextColor="#888"
-              value={salaryRange}
-              onChangeText={setSalaryRange}
-            />
           </>
         )}
 
-        {/* Condition for applicable categories */}
+        {/* Condition */}
         {needsCondition && (
           <>
             <Text style={styles.label}>Condition</Text>
@@ -286,14 +276,15 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        <Text style={styles.label}>Price / Salary (₹) *</Text>
+        {/* Price or Salary */}
+        <Text style={styles.label}>{isJob ? 'Salary / Pay Range (₹) *' : 'Price (₹) *'}</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g., 25000"
+          placeholder={isJob ? 'e.g., 15,000 - 25,000 / month' : 'e.g., 25000'}
           placeholderTextColor="#888"
-          keyboardType="numeric"
-          value={price}
-          onChangeText={setPrice}
+          keyboardType={isJob ? 'default' : 'numeric'}
+          value={priceOrSalary}
+          onChangeText={setPriceOrSalary}
         />
 
         <Text style={styles.label}>Pickup Location (Auto-detected)</Text>
@@ -303,26 +294,31 @@ export default function AdPostScreen({ route, navigation }: any) {
           editable={false}
         />
 
-        <Text style={styles.label}>Product Images (Min 2, Max 10 Required)</Text>
-        {images.map((img, index) => (
-          <View key={index} style={styles.imageRow}>
-            <TextInput
-              style={[styles.input, { flex: 1, marginBottom: 0 }]}
-              placeholder={`Image URL or Path ${index + 1}`}
-              placeholderTextColor="#888"
-              value={img}
-              onChangeText={(text) => handleImageChange(text, index)}
-            />
-            <TouchableOpacity style={styles.galleryBtn} onPress={() => handlePickFromGallery(index)}>
-              <Text style={styles.galleryBtnText}>📂</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
+        {/* Images (Not strictly required for Jobs) */}
+        {!isJob && (
+          <>
+            <Text style={styles.label}>Product Images (Min 2, Max 10 Required)</Text>
+            {images.map((img, index) => (
+              <View key={index} style={styles.imageRow}>
+                <TextInput
+                  style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                  placeholder={`Image URL or Path ${index + 1}`}
+                  placeholderTextColor="#888"
+                  value={img}
+                  onChangeText={(text) => handleImageChange(text, index)}
+                />
+                <TouchableOpacity style={styles.galleryBtn} onPress={() => handlePickFromGallery(index)}>
+                  <Text style={styles.galleryBtnText}>📂</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
 
-        {images.length < 10 && (
-          <TouchableOpacity style={styles.addImageButton} onPress={handleAddImageSlot}>
-            <Text style={styles.addImageText}>+ Add Another Image</Text>
-          </TouchableOpacity>
+            {images.length < 10 && (
+              <TouchableOpacity style={styles.addImageButton} onPress={handleAddImageSlot}>
+                <Text style={styles.addImageText}>+ Add Another Image</Text>
+              </TouchableOpacity>
+            )}
+          </>
         )}
 
         <Text style={styles.label}>Description & Condition</Text>
@@ -349,7 +345,7 @@ export default function AdPostScreen({ route, navigation }: any) {
         </TouchableOpacity>
       </View>
 
-      {/* Universal Floating Modal */}
+      {/* Floating Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
