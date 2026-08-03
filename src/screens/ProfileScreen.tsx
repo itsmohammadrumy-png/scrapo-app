@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -10,21 +10,27 @@ import {
   StatusBar,
   Modal,
   TextInput,
-  Image
+  Image,
+  ScrollView,
+  Share
 } from 'react-native';
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import { signOut, updateProfile } from 'firebase/auth';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ProfileScreen({ navigation }: any) {
   const [userListings, setUserListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // ప్రొఫైల్ ఎడిటింగ్ మరియు సెట్టింగ్స్ కోసం స్టేట్స్
+  // ప్రొఫైల్ ఎడిటింగ్ స్టేట్స్
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [photoURL, setPhotoURL] = useState('');
   const [updating, setUpdating] = useState(false);
+
+  // గ్రీన్ కాయిన్స్ & రెఫరల్ స్టేట్
+  const [greenCoins, setGreenCoins] = useState(150);
 
   const currentUser = auth.currentUser;
 
@@ -40,21 +46,36 @@ export default function ProfileScreen({ navigation }: any) {
         where('sellerId', '==', currentUser.uid)
       );
       const querySnapshot = await getDocs(q);
-      const listings = querySnapshot.docs.map(doc => ({
+      let listings = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
+
+      if (listings.length === 0) {
+        const qAlt = query(
+          collection(db, 'marketplaceListings'),
+          where('userId', '==', currentUser.uid)
+        );
+        const snapshotAlt = await getDocs(qAlt);
+        listings = snapshotAlt.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+      }
+
       setUserListings(listings);
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('Error fetching user listings:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchUserDataAndListings();
-  }, [currentUser]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserDataAndListings();
+    }, [currentUser])
+  );
 
   // ప్రొఫైల్ అప్‌డేట్ చేయడానికి ఫంక్షన్
   const handleUpdateProfile = async () => {
@@ -67,11 +88,23 @@ export default function ProfileScreen({ navigation }: any) {
       });
       Alert.alert("Success", "ప్రొఫైల్ విజయవంతంగా అప్‌డేట్ చేయబడింది!");
       setIsEditModalVisible(false);
+      fetchUserDataAndListings();
     } catch (error) {
       console.error("Error updating profile:", error);
       Alert.alert("Error", "ప్రొఫైల్ అప్‌డేట్ చేయడంలో సమస్య వచ్చింది.");
     } finally {
       setUpdating(false);
+    }
+  };
+
+  // రెఫరల్ లింక్ షేర్ చేయడానికి ఫంక్షన్
+  const handleReferralShare = async () => {
+    try {
+      await Share.share({
+        message: `🌿 Scrapo యాప్‌లో జాయిన్ అవ్వండి మరియు గ్రీన్ కాయిన్స్ సంపాదించండి! నా రెఫరల్ కోడ్ ద్వారా సైన్ అప్ చేయండి: SCRAPO123`,
+      });
+    } catch (error) {
+      console.error('Error sharing referral:', error);
     }
   };
 
@@ -148,59 +181,79 @@ export default function ProfileScreen({ navigation }: any) {
     <View style={styles.container}>
       <StatusBar backgroundColor="#2e7d32" barStyle="light-content" />
       
-      {/* ప్రొఫైల్ హెడర్ కార్డ్ */}
-      <View style={styles.headerCard}>
-        {currentUser?.photoURL ? (
-          <Image source={{ uri: currentUser.photoURL }} style={styles.avatarImage} />
-        ) : (
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {currentUser?.displayName ? currentUser.displayName[0].toUpperCase() : (currentUser?.email ? currentUser.email[0].toUpperCase() : 'U')}
-            </Text>
-          </View>
-        )}
-        
-        <View style={styles.userInfo}>
-          <Text style={styles.userName} numberOfLines={1}>
-            {currentUser?.displayName || 'Scrapo User'}
-          </Text>
-          <Text style={styles.userEmail} numberOfLines={1}>{currentUser?.email || ''}</Text>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
+        {/* ప్రొఫైల్ హెడర్ కార్డ్ */}
+        <View style={styles.headerCard}>
+          {currentUser?.photoURL ? (
+            <Image source={{ uri: currentUser.photoURL }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {currentUser?.displayName ? currentUser.displayName[0].toUpperCase() : (currentUser?.email ? currentUser.email[0].toUpperCase() : 'U')}
+              </Text>
+            </View>
+          )}
           
-          <View style={styles.statsBadge}>
-            <Text style={styles.statsText}>Total Ads: {userListings.length}</Text>
+          <View style={styles.userInfo}>
+            <Text style={styles.userName} numberOfLines={1}>
+              {currentUser?.displayName || 'Scrapo User'}
+            </Text>
+            <Text style={styles.userEmail} numberOfLines={1}>{currentUser?.email || ''}</Text>
+            
+            <View style={styles.statsBadge}>
+              <Text style={styles.statsText}>Total Ads: {userListings.length}</Text>
+            </View>
+          </View>
+
+          <View style={styles.headerButtons}>
+            <TouchableOpacity style={styles.editButton} onPress={() => setIsEditModalVisible(true)}>
+              <Text style={styles.editText}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.headerButtons}>
-          <TouchableOpacity style={styles.editButton} onPress={() => setIsEditModalVisible(true)}>
-            <Text style={styles.editText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutText}>Logout</Text>
+        {/* 🌿 Green Coins Wallet & Referral Banner */}
+        <View style={styles.coinCard}>
+          <View style={styles.coinInfo}>
+            <Text style={styles.coinTitle}>🌿 My Green Coins</Text>
+            <Text style={styles.coinCount}>{greenCoins} Coins Available</Text>
+          </View>
+          <TouchableOpacity style={styles.referBtn} onPress={handleReferralShare}>
+            <Text style={styles.referBtnText}>Refer & Earn</Text>
           </TouchableOpacity>
         </View>
-      </View>
 
-      <Text style={styles.sectionTitle}>My Posted Ads</Text>
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#2e7d32" style={{ marginTop: 40 }} />
-      ) : userListings.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyEmoji}>📦</Text>
-          <Text style={styles.noDataText}>మీరు ఇంకా ఎలాంటి యాడ్స్ పోస్ట్ చేయలేదు.</Text>
+        {/* సహాయం & సపోర్ట్ సెక్షన్ */}
+        <View style={styles.supportCard}>
+          <Text style={styles.supportTitle}>💡 Help & Support</Text>
+          <Text style={styles.supportText}>
+            స్నేహితులకు రెఫర్ చేయడం ద్వారా గ్రీన్ కాయిన్స్ పొందండి. సందేహాల కోసం support@scrapoapp.com ని సంప్రదించండి.
+          </Text>
         </View>
-      ) : (
-        <FlatList
-          data={userListings}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
 
-      {/* ప్రొఫైల్ ఎడిట్ మోడల్ (Edit Profile Modal) */}
+        <Text style={styles.sectionTitle}>My Posted Ads</Text>
+
+        {loading ? (
+          <ActivityIndicator size="large" color="#2e7d32" style={{ marginTop: 20 }} />
+        ) : userListings.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyEmoji}>📦</Text>
+            <Text style={styles.noDataText}>మీరు ఇంకా ఎలాంటి యాడ్స్ పోస్ట్ చేయలేదు.</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={userListings}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            scrollEnabled={false}
+          />
+        )}
+      </ScrollView>
+
+      {/* ప్రొఫైల్ ఎడిట్ మోడల్ */}
       <Modal
         visible={isEditModalVisible}
         animationType="slide"
@@ -262,7 +315,7 @@ const styles = StyleSheet.create({
     padding: 14, 
     borderRadius: 12,
     alignItems: 'center', 
-    marginBottom: 20, 
+    marginBottom: 15, 
     elevation: 3, 
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 }, 
@@ -314,8 +367,40 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   logoutText: { color: '#c62828', fontWeight: 'bold', fontSize: 11 },
+  coinCard: {
+    flexDirection: 'row',
+    backgroundColor: '#e8f5e9',
+    padding: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#c8e6c9'
+  },
+  coinInfo: { flex: 1 },
+  coinTitle: { fontSize: 14, fontWeight: 'bold', color: '#2e7d32' },
+  coinCount: { fontSize: 16, fontWeight: 'bold', color: '#1b5e20', marginTop: 2 },
+  referBtn: {
+    backgroundColor: '#2e7d32',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8
+  },
+  referBtnText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  supportCard: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 15,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 2
+  },
+  supportTitle: { fontSize: 13, fontWeight: 'bold', color: '#333', marginBottom: 4 },
+  supportText: { fontSize: 11, color: '#666', lineHeight: 16 },
   sectionTitle: { fontSize: 17, fontWeight: 'bold', color: '#333', marginBottom: 12 },
-  listContainer: { paddingBottom: 20 },
   listingCard: {
     flexDirection: 'row', 
     backgroundColor: '#fff', 
@@ -342,10 +427,9 @@ const styles = StyleSheet.create({
     borderRadius: 6 
   },
   deleteButtonText: { color: '#c62828', fontSize: 12, fontWeight: 'bold' },
-  emptyContainer: { alignItems: 'center', justifyContent: 'center', marginTop: 60 },
+  emptyContainer: { alignItems: 'center', justifyContent: 'center', marginTop: 30 },
   emptyEmoji: { fontSize: 40, marginBottom: 10 },
   noDataText: { fontSize: 14, color: '#666', textAlign: 'center' },
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -378,4 +462,3 @@ const styles = StyleSheet.create({
   saveBtn: { backgroundColor: '#2e7d32' },
   saveBtnText: { color: '#fff', fontWeight: 'bold' }
 });
-
