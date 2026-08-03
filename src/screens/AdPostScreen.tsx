@@ -3,15 +3,24 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView,
 import { addDocument } from '../services/firestoreService';
 
 export default function AdPostScreen({ route, navigation }: any) {
-  const { categoryName } = route.params || { categoryName: 'General' };
+  const { categoryName } = route.params || { categoryName: 'Mobiles & Tablets' };
+  
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
-  const [year, setYear] = useState('');
-  const [details, setDetails] = useState('');
   const [location, setLocation] = useState('Guntur');
-  const [images, setImages] = useState<string[]>(['', '']); // Min 2 default slots
+  const [description, setDescription] = useState('');
+  
+  // Dynamic fields state
+  const [ram, setRam] = useState('');
+  const [storage, setStorage] = useState('');
+  const [fuelType, setFuelType] = useState('');
+  const [transmission, setTransmission] = useState('');
+  const [year, setYear] = useState('');
+  const [insurance, setInsurance] = useState('');
+  
+  const [images, setImages] = useState<string[]>(['', '']);
   const [loading, setLoading] = useState(false);
 
   const handleAddImageSlot = () => {
@@ -36,7 +45,7 @@ export default function AdPostScreen({ route, navigation }: any) {
 
     const validImages = images.filter(img => img.trim() !== '');
     if (validImages.length < 2) {
-      Alert.alert('Error', 'Please provide at least 2 image URLs/paths.');
+      Alert.alert('Error', 'Please provide at least 2 image URLs.');
       return;
     }
 
@@ -48,14 +57,21 @@ export default function AdPostScreen({ route, navigation }: any) {
         price,
         brand,
         model,
-        year,
-        details,
         location,
+        description,
+        attributes: {
+          ram,
+          storage,
+          fuelType,
+          transmission,
+          year,
+          insurance,
+        },
         images: validImages,
         status: 'Active',
         createdAt: new Date().toISOString(),
       });
-      Alert.alert('Success', 'Ad posted successfully with images to Marketplace!');
+      Alert.alert('Success', 'Ad posted successfully with full specifications!');
       navigation.goBack();
     } catch (error) {
       console.error('Error posting ad:', error);
@@ -65,9 +81,13 @@ export default function AdPostScreen({ route, navigation }: any) {
     }
   };
 
+  // Check category type to render specific fields
+  const isMobile = categoryName.toLowerCase().includes('mobile');
+  const isCarOrBike = categoryName.toLowerCase().includes('car') || categoryName.toLowerCase().includes('bike');
+
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Post Ad in {categoryName}</Text>
+      <Text style={styles.title}>Post Ad: {categoryName}</Text>
       
       <View style={styles.form}>
         <Text style={styles.label}>Item Title *</Text>
@@ -82,7 +102,7 @@ export default function AdPostScreen({ route, navigation }: any) {
         <Text style={styles.label}>Brand</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g., Apple, Maruti, Sony"
+          placeholder="e.g., Apple, Samsung, Maruti"
           placeholderTextColor="#888"
           value={brand}
           onChangeText={setBrand}
@@ -91,26 +111,81 @@ export default function AdPostScreen({ route, navigation }: any) {
         <Text style={styles.label}>Model / Variant</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g., 256GB / ZXI Plus"
+          placeholder="e.g., Pro Max / ZXI"
           placeholderTextColor="#888"
           value={model}
           onChangeText={setModel}
         />
 
-        <Text style={styles.label}>Manufacturing / Purchase Year</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g., 2023"
-          placeholderTextColor="#888"
-          keyboardType="numeric"
-          value={year}
-          onChangeText={setYear}
-        />
+        {/* Dynamic Fields for Mobiles */}
+        {isMobile && (
+          <>
+            <Text style={styles.label}>RAM</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., 8GB / 12GB"
+              placeholderTextColor="#888"
+              value={ram}
+              onChangeText={setRam}
+            />
+
+            <Text style={styles.label}>Storage</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., 128GB / 256GB"
+              placeholderTextColor="#888"
+              value={storage}
+              onChangeText={setStorage}
+            />
+          </>
+        )}
+
+        {/* Dynamic Fields for Cars & Bikes */}
+        {isCarOrBike && (
+          <>
+            <Text style={styles.label}>Fuel Type</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., Petrol, Diesel, Electric, CNG"
+              placeholderTextColor="#888"
+              value={fuelType}
+              onChangeText={setFuelType}
+            />
+
+            <Text style={styles.label}>Transmission</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., Manual, Automatic"
+              placeholderTextColor="#888"
+              value={transmission}
+              onChangeText={setTransmission}
+            />
+
+            <Text style={styles.label}>Manufacturing Year</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., 2022"
+              placeholderTextColor="#888"
+              keyboardType="numeric"
+              value={year}
+              onChangeText={setYear}
+            />
+
+            <Text style={styles.label}>Insurance Status</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., Valid up to 2027 / Expired"
+              placeholderTextColor="#888"
+              value={insurance}
+              onChangeText={setInsurance}
+            />
+          </>
+        )}
 
         <Text style={styles.label}>Price (₹) *</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g., 45000"
+          placeholder="e.g., 25000"
           placeholderTextColor="#888"
           keyboardType="numeric"
           value={price}
@@ -120,7 +195,7 @@ export default function AdPostScreen({ route, navigation }: any) {
         <Text style={styles.label}>Pickup Location</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g., Raghava Nagar, Guntur"
+          placeholder="e.g., Guntur"
           placeholderTextColor="#888"
           value={location}
           onChangeText={setLocation}
@@ -151,8 +226,8 @@ export default function AdPostScreen({ route, navigation }: any) {
           placeholderTextColor="#888"
           multiline
           numberOfLines={4}
-          value={details}
-          onChangeText={setDetails}
+          value={description}
+          onChangeText={setDescription}
         />
 
         <TouchableOpacity 
