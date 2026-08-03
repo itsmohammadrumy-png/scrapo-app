@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Modal, FlatList } from 'react-native';
 import { addDocument } from '../services/firestoreService';
+import { MARKET_CATEGORIES } from '../constants/marketCategories';
 
 export default function AdPostScreen({ route, navigation }: any) {
-  const { categoryName } = route.params || { categoryName: 'Mobile Phones' };
+  // If a categoryName was passed in (e.g. user had a category selected on
+  // the Marketplace screen), start with that. Otherwise start empty and
+  // let the user pick a category from a selector at the top of the form.
+  const initialCategory = route.params?.categoryName || '';
+  const [categoryName, setCategoryName] = useState(initialCategory);
 
   const [title, setTitle] = useState('');
   const [priceOrSalary, setPriceOrSalary] = useState('');
@@ -146,7 +151,13 @@ export default function AdPostScreen({ route, navigation }: any) {
   };
 
   const handleSelectModalItem = (item: string) => {
-    if (modalType === 'brand') {
+    if (modalType === 'category') {
+      setCategoryName(item);
+      // Category changed — reset fields that only made sense for the old category
+      setBrand('');
+      setModel('');
+    }
+    else if (modalType === 'brand') {
       setBrand(item);
       setModel(''); // reset dependent model when brand changes
     }
@@ -234,6 +245,10 @@ export default function AdPostScreen({ route, navigation }: any) {
     : 'e.g., Sofa Set 3+2 / Study Table';
 
   const handleSubmit = async () => {
+    if (!categoryName) {
+      Alert.alert('Error', 'Please select a category first.');
+      return;
+    }
     if (!title || !priceOrSalary) {
       Alert.alert('Error', 'Please enter item title and price/salary');
       return;
@@ -308,9 +323,21 @@ export default function AdPostScreen({ route, navigation }: any) {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Post Ad: {categoryName}</Text>
+      <Text style={styles.title}>Post Ad{categoryName ? `: ${categoryName}` : ''}</Text>
 
       <View style={styles.form}>
+        <Text style={styles.label}>Category *</Text>
+        <TouchableOpacity
+          style={styles.dropdownButton}
+          onPress={() => openModal('category', MARKET_CATEGORIES.map((c: any) => c.name))}
+        >
+          <Text style={styles.dropdownButtonText}>{categoryName || 'Select Category'}</Text>
+        </TouchableOpacity>
+
+        {!categoryName ? (
+          <Text style={styles.helperText}>Please select a category above to continue.</Text>
+        ) : (
+        <>
         <Text style={styles.label}>Item Title *</Text>
         <TextInput
           style={styles.input}
@@ -616,6 +643,8 @@ export default function AdPostScreen({ route, navigation }: any) {
             <Text style={styles.buttonText}>Post Ad Now</Text>
           )}
         </TouchableOpacity>
+        </>
+        )}
       </View>
 
       {/* Floating Modal */}
@@ -652,6 +681,7 @@ const styles = StyleSheet.create({
   disabledInput: { backgroundColor: '#eee', color: '#666' },
   dropdownButton: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, backgroundColor: '#fafafa', marginBottom: 8, justifyContent: 'center' },
   dropdownButtonText: { fontSize: 14, color: '#333' },
+  helperText: { fontSize: 13, color: '#888', marginTop: 4, marginBottom: 8, fontStyle: 'italic' },
   imageRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   galleryBtn: { marginLeft: 8, backgroundColor: '#e8f5e9', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#c8e6c9' },
   galleryBtnText: { fontSize: 16 },
