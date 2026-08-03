@@ -18,6 +18,7 @@ import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/fire
 import { db, auth } from '../config/firebase';
 import { signOut, updateProfile } from 'firebase/auth';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen({ navigation }: any) {
   const [userListings, setUserListings] = useState<any[]>([]);
@@ -34,7 +35,6 @@ export default function ProfileScreen({ navigation }: any) {
 
   const currentUser = auth.currentUser;
 
-  // యూజర్ వివరాలు మరియు యాడ్స్ ఫెచ్ చేయడం
   const fetchUserDataAndListings = async () => {
     if (!currentUser) return;
     try {
@@ -77,7 +77,6 @@ export default function ProfileScreen({ navigation }: any) {
     }, [currentUser])
   );
 
-  // ప్రొఫైల్ అప్‌డేట్ చేయడానికి ఫంక్షన్
   const handleUpdateProfile = async () => {
     if (!currentUser) return;
     try {
@@ -97,7 +96,6 @@ export default function ProfileScreen({ navigation }: any) {
     }
   };
 
-  // రెఫరల్ లింక్ షేర్ చేయడానికి ఫంక్షన్
   const handleReferralShare = async () => {
     try {
       await Share.share({
@@ -108,7 +106,6 @@ export default function ProfileScreen({ navigation }: any) {
     }
   };
 
-  // యాడ్‌ని డిలీట్ చేయడానికి ఫంక్షన్
   const handleDeleteListing = async (listingId: string) => {
     Alert.alert(
       "Delete Listing",
@@ -133,7 +130,6 @@ export default function ProfileScreen({ navigation }: any) {
     );
   };
 
-  // లాగౌట్ హ్యాండ్లర్
   const handleLogout = async () => {
     Alert.alert(
       "Logout",
@@ -179,69 +175,125 @@ export default function ProfileScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#2e7d32" barStyle="light-content" />
+      <StatusBar backgroundColor="#fff" barStyle="dark-content" />
       
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
-        {/* ప్రొఫైల్ హెడర్ కార్డ్ */}
+      {/* టాప్ నావ్‌బಾರ್ */}
+      <View style={styles.topNav}>
+        <Text style={styles.profileHeaderTitle}>Profile</Text>
+        <TouchableOpacity>
+          <Ionicons name="settings-outline" size={24} color="#333" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        
+        {/* ప్రొఫైల్ మెయిన్ కార్డ్ */}
         <View style={styles.headerCard}>
-          {currentUser?.photoURL ? (
-            <Image source={{ uri: currentUser.photoURL }} style={styles.avatarImage} />
-          ) : (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {currentUser?.displayName ? currentUser.displayName[0].toUpperCase() : (currentUser?.email ? currentUser.email[0].toUpperCase() : 'U')}
+          <View style={styles.profileTopRow}>
+            <View style={styles.avatarContainer}>
+              {currentUser?.photoURL ? (
+                <Image source={{ uri: currentUser.photoURL }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>
+                    {currentUser?.displayName ? currentUser.displayName[0].toUpperCase() : (currentUser?.email ? currentUser.email[0].toUpperCase() : 'U')}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.cameraBadge}>
+                <Ionicons name="camera" size={12} color="#fff" />
+              </View>
+            </View>
+
+            <View style={styles.userInfo}>
+              <Text style={styles.userName} numberOfLines={1}>
+                {currentUser?.displayName || 'Scrapo User'}
               </Text>
+              <Text style={styles.userPhone}>{currentUser?.phoneNumber || '+91 98765 43210'}</Text>
+              <Text style={styles.userEmail} numberOfLines={1}>{currentUser?.email || ''}</Text>
+              
+              <View style={styles.verifiedRow}>
+                <Ionicons name="checkmark-circle" size={14} color="#2e7d32" />
+                <Text style={styles.verifiedText}>Verified</Text>
+              </View>
             </View>
-          )}
-          
-          <View style={styles.userInfo}>
-            <Text style={styles.userName} numberOfLines={1}>
-              {currentUser?.displayName || 'Scrapo User'}
-            </Text>
-            <Text style={styles.userEmail} numberOfLines={1}>{currentUser?.email || ''}</Text>
-            
-            <View style={styles.statsBadge}>
-              <Text style={styles.statsText}>Total Ads: {userListings.length}</Text>
-            </View>
+
+            <TouchableOpacity style={styles.editProfileBtn} onPress={() => setIsEditModalVisible(true)}>
+              <Ionicons name="create-outline" size={14} color="#2e7d32" style={{ marginRight: 4 }} />
+              <Text style={styles.editProfileText}>Edit Profile</Text>
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.headerButtons}>
-            <TouchableOpacity style={styles.editButton} onPress={() => setIsEditModalVisible(true)}>
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-              <Text style={styles.logoutText}>Logout</Text>
-            </TouchableOpacity>
+          {/* 4 స్టాట్స్ బాక్సెస్ */}
+          <View style={styles.statsRow}>
+            <View style={styles.statBox}>
+              <Ionicons name="document-text-outline" size={18} color="#2e7d32" />
+              <Text style={styles.statNumber}>{userListings.length}</Text>
+              <Text style={styles.statLabel}>Total Ads</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statBox}>
+              <Ionicons name="star" size={18} color="#fbc02d" />
+              <Text style={styles.statNumber}>4.8</Text>
+              <Text style={styles.statLabel}>Rating</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statBox}>
+              <Ionicons name="leaf-outline" size={18} color="#2e7d32" />
+              <Text style={styles.statNumber}>{greenCoins}</Text>
+              <Text style={styles.statLabel}>Green Coins</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statBox}>
+              <Ionicons name="shield-checkmark-outline" size={18} color="#1565c0" />
+              <Text style={styles.statNumber}>2</Text>
+              <Text style={styles.statLabel}>Badges</Text>
+            </View>
           </View>
         </View>
 
-        {/* 🌿 Green Coins Wallet & Referral Banner */}
+        {/* 🌿 Green Coins Banner */}
         <View style={styles.coinCard}>
           <View style={styles.coinInfo}>
-            <Text style={styles.coinTitle}>🌿 My Green Coins</Text>
+            <Text style={styles.coinTitle}>My Green Coins</Text>
             <Text style={styles.coinCount}>{greenCoins} Coins Available</Text>
+            <Text style={styles.coinSubText}>Earn coins and get exciting rewards</Text>
           </View>
           <TouchableOpacity style={styles.referBtn} onPress={handleReferralShare}>
+            <Ionicons name="gift-outline" size={14} color="#fff" style={{ marginRight: 4 }} />
             <Text style={styles.referBtnText}>Refer & Earn</Text>
           </TouchableOpacity>
         </View>
 
         {/* సహాయం & సపోర్ట్ సెక్షన్ */}
         <View style={styles.supportCard}>
-          <Text style={styles.supportTitle}>💡 Help & Support</Text>
-          <Text style={styles.supportText}>
-            స్నేహితులకు రెఫర్ చేయడం ద్వారా గ్రీన్ కాయిన్స్ పొందండి. సందేహాల కోసం support@scrapoapp.com ని సంప్రదించండి.
-          </Text>
+          <View>
+            <Text style={styles.supportTitle}>Help & Support</Text>
+            <Text style={styles.supportSubText}>సహాయం కావాలా? మమ్మల్ని సంప్రదించండి.</Text>
+            <Text style={styles.supportEmail}>support@scrapo.com</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#666" />
         </View>
 
-        <Text style={styles.sectionTitle}>My Posted Ads</Text>
+        {/* My Posted Ads Section */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>My Posted Ads</Text>
+          <TouchableOpacity>
+            <Text style={styles.viewAllText}>View All →</Text>
+          </TouchableOpacity>
+        </View>
 
         {loading ? (
           <ActivityIndicator size="large" color="#2e7d32" style={{ marginTop: 20 }} />
         ) : userListings.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>📦</Text>
-            <Text style={styles.noDataText}>మీరు ఇంకా ఎలాంటి యాడ్స్ పోస్ట్ చేయలేదు.</Text>
+            <View style={styles.plusCircle}>
+              <Ionicons name="add" size={24} color="#2e7d32" />
+            </View>
+            <Text style={styles.noDataText}>You haven't posted any ads yet.</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Sell')} style={styles.postFirstAdBtn}>
+              <Text style={styles.postFirstAdText}>Post Your First Ad</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <FlatList
@@ -251,6 +303,57 @@ export default function ProfileScreen({ navigation }: any) {
             scrollEnabled={false}
           />
         )}
+
+        {/* Account Settings List */}
+        <Text style={styles.sectionTitleAccount}>Account</Text>
+        <View style={styles.accountCard}>
+          <TouchableOpacity style={styles.accountItem}>
+            <View style={styles.accountItemLeft}>
+              <Ionicons name="person-outline" size={18} color="#2e7d32" />
+              <Text style={styles.accountItemText}>Personal Information</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#aaa" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.accountItem}>
+            <View style={styles.accountItemLeft}>
+              <Ionicons name="location-outline" size={18} color="#2e7d32" />
+              <Text style={styles.accountItemText}>Saved Addresses</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#aaa" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.accountItem}>
+            <View style={styles.accountItemLeft}>
+              <Ionicons name="receipt-outline" size={18} color="#2e7d32" />
+              <Text style={styles.accountItemText}>My Bookings</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#aaa" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.accountItem}>
+            <View style={styles.accountItemLeft}>
+              <Ionicons name="heart-outline" size={18} color="#2e7d32" />
+              <Text style={styles.accountItemText}>My Favorites</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#aaa" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.accountItem, { borderBottomWidth: 0 }]}>
+            <View style={styles.accountItemLeft}>
+              <Ionicons name="notifications-outline" size={18} color="#2e7d32" />
+              <Text style={styles.accountItemText}>Notifications</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#aaa" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Logout Button */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={18} color="#c62828" style={{ marginRight: 6 }} />
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+
       </ScrollView>
 
       {/* ప్రొఫైల్ ఎడిట్ మోడల్ */}
@@ -308,70 +411,85 @@ export default function ProfileScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9fa', padding: 16, paddingTop: 30 },
+  container: { flex: 1, backgroundColor: '#f8f9fa', paddingHorizontal: 16 },
+  topNav: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 40, paddingBottom: 10 },
+  profileHeaderTitle: { fontSize: 20, fontWeight: 'bold', color: '#333' },
   headerCard: {
-    flexDirection: 'row', 
     backgroundColor: '#fff', 
-    padding: 14, 
-    borderRadius: 12,
-    alignItems: 'center', 
+    padding: 16, 
+    borderRadius: 14,
     marginBottom: 15, 
-    elevation: 3, 
+    elevation: 2, 
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 }, 
+    shadowOffset: { width: 0, height: 1 }, 
     shadowOpacity: 0.1, 
-    shadowRadius: 4,
+    shadowRadius: 3,
   },
+  profileTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
+  avatarContainer: { position: 'relative', marginRight: 12 },
   avatar: {
-    width: 50, 
-    height: 50, 
-    borderRadius: 25, 
+    width: 60, 
+    height: 60, 
+    borderRadius: 30, 
     backgroundColor: '#2e7d32',
     justifyContent: 'center', 
     alignItems: 'center', 
-    marginRight: 10,
   },
   avatarImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
   },
-  avatarText: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-  userInfo: { flex: 1, marginRight: 5 },
-  userName: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-  userEmail: { fontSize: 11, color: '#666', marginTop: 1 },
-  statsBadge: { 
-    marginTop: 4, 
+  avatarText: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
+  cameraBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#2e7d32',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#fff'
+  },
+  userInfo: { flex: 1 },
+  userName: { fontSize: 16, fontWeight: 'bold', color: '#333' },
+  userPhone: { fontSize: 12, color: '#555', marginTop: 2 },
+  userEmail: { fontSize: 12, color: '#666', marginTop: 1 },
+  verifiedRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+  verifiedText: { fontSize: 11, color: '#2e7d32', fontWeight: 'bold', marginLeft: 3 },
+  editProfileBtn: { 
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#e8f5e9', 
-    alignSelf: 'flex-start', 
-    paddingHorizontal: 6, 
-    paddingVertical: 2, 
-    borderRadius: 4 
-  },
-  statsText: { fontSize: 10, color: '#2e7d32', fontWeight: 'bold' },
-  headerButtons: { justifyContent: 'space-between', height: 60 },
-  editButton: { 
-    backgroundColor: '#e3f2fd', 
-    paddingVertical: 4, 
+    paddingVertical: 6, 
     paddingHorizontal: 10, 
-    borderRadius: 5,
-    alignItems: 'center'
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#c8e6c9'
   },
-  editText: { color: '#1565c0', fontWeight: 'bold', fontSize: 11 },
-  logoutButton: { 
-    backgroundColor: '#ffebee', 
-    paddingVertical: 4, 
-    paddingHorizontal: 10, 
-    borderRadius: 5,
-    alignItems: 'center'
+  editProfileText: { color: '#2e7d32', fontWeight: 'bold', fontSize: 11 },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#f9f9f9',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+    borderWidth: 1,
+    borderColor: '#eee'
   },
-  logoutText: { color: '#c62828', fontWeight: 'bold', fontSize: 11 },
+  statBox: { flex: 1, alignItems: 'center' },
+  statDivider: { width: 1, backgroundColor: '#ddd', height: '80%', alignSelf: 'center' },
+  statNumber: { fontSize: 14, fontWeight: 'bold', color: '#333', marginTop: 2 },
+  statLabel: { fontSize: 10, color: '#666', marginTop: 1 },
   coinCard: {
     flexDirection: 'row',
     backgroundColor: '#e8f5e9',
-    padding: 14,
-    borderRadius: 12,
+    padding: 16,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 12,
@@ -381,38 +499,102 @@ const styles = StyleSheet.create({
   coinInfo: { flex: 1 },
   coinTitle: { fontSize: 14, fontWeight: 'bold', color: '#2e7d32' },
   coinCount: { fontSize: 16, fontWeight: 'bold', color: '#1b5e20', marginTop: 2 },
+  coinSubText: { fontSize: 11, color: '#555', marginTop: 2 },
   referBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#2e7d32',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 8
+    borderRadius: 20
   },
   referBtnText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
   supportCard: {
+    flexDirection: 'row',
     backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 10,
+    padding: 14,
+    borderRadius: 14,
     marginBottom: 15,
+    alignItems: 'center',
+    justifyContent: 'space-between',
     elevation: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 2
+    borderWidth: 1,
+    borderColor: '#eee'
   },
-  supportTitle: { fontSize: 13, fontWeight: 'bold', color: '#333', marginBottom: 4 },
-  supportText: { fontSize: 11, color: '#666', lineHeight: 16 },
-  sectionTitle: { fontSize: 17, fontWeight: 'bold', color: '#333', marginBottom: 12 },
+  supportTitle: { fontSize: 14, fontWeight: 'bold', color: '#333' },
+  supportSubText: { fontSize: 12, color: '#666', marginTop: 2 },
+  supportEmail: { fontSize: 11, color: '#2e7d32', fontWeight: '600', marginTop: 2 },
+  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#333' },
+  sectionTitleAccount: { fontSize: 16, fontWeight: 'bold', color: '#333', marginTop: 10, marginBottom: 10 },
+  viewAllText: { fontSize: 13, color: '#2e7d32', fontWeight: 'bold' },
+  emptyContainer: { 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderStyle: 'dashed',
+    marginBottom: 15
+  },
+  plusCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#e8f5e9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8
+  },
+  noDataText: { fontSize: 13, color: '#666', marginBottom: 12 },
+  postFirstAdBtn: {
+    backgroundColor: '#2e7d32',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8
+  },
+  postFirstAdText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
+  accountCard: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#eee',
+    overflow: 'hidden',
+    marginBottom: 15,
+  },
+  accountItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f1f1'
+  },
+  accountItemLeft: { flexDirection: 'row', alignItems: 'center' },
+  accountItemText: { fontSize: 14, color: '#333', marginLeft: 12, fontWeight: '500' },
+  logoutButton: { 
+    flexDirection: 'row',
+    backgroundColor: '#fff', 
+    padding: 14, 
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#ffcdd2'
+  },
+  logoutText: { color: '#c62828', fontWeight: 'bold', fontSize: 14 },
   listingCard: {
     flexDirection: 'row', 
     backgroundColor: '#fff', 
     padding: 14, 
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center', 
     marginBottom: 10, 
-    elevation: 2, 
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 }, 
-    shadowOpacity: 0.08, 
-    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: '#eee'
   },
   listingInfo: { flex: 1, marginRight: 10 },
   listingTitle: { fontSize: 15, fontWeight: 'bold', color: '#333' },
@@ -427,9 +609,6 @@ const styles = StyleSheet.create({
     borderRadius: 6 
   },
   deleteButtonText: { color: '#c62828', fontSize: 12, fontWeight: 'bold' },
-  emptyContainer: { alignItems: 'center', justifyContent: 'center', marginTop: 30 },
-  emptyEmoji: { fontSize: 40, marginBottom: 10 },
-  noDataText: { fontSize: 14, color: '#666', textAlign: 'center' },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -440,7 +619,7 @@ const styles = StyleSheet.create({
   modalContent: {
     backgroundColor: '#fff',
     width: '100%',
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 20,
     elevation: 5
   },
@@ -462,3 +641,4 @@ const styles = StyleSheet.create({
   saveBtn: { backgroundColor: '#2e7d32' },
   saveBtnText: { color: '#fff', fontWeight: 'bold' }
 });
+
