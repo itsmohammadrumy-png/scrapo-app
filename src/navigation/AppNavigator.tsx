@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -15,6 +16,7 @@ import ChatScreen from '../screens/ChatScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ScrapUploadScreen from '../screens/ScrapUploadScreen';
 import AdPostScreen from '../screens/AdPostScreen';
+import AdDetailScreen from '../screens/AdDetailScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -42,6 +44,7 @@ export default function AppNavigator() {
         <Stack.Screen name="MainApp" component={MainTabNavigator} />
         <Stack.Screen name="ScrapUpload" component={ScrapUploadScreen} />
         <Stack.Screen name="AdPost" component={AdPostScreen} />
+        <Stack.Screen name="AdDetail" component={AdDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
