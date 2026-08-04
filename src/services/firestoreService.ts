@@ -56,4 +56,3 @@ export const getDocumentsWhere = async (collectionName: string, field: string, v
     throw error;
   }
 };
-
