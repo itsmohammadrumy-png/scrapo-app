@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Modal, FlatList } from 'react-native';
 import { addDocument } from '../services/firestoreService';
 import { MARKET_CATEGORIES } from '../constants/marketCategories';
@@ -9,6 +9,10 @@ export default function AdPostScreen({ route, navigation }: any) {
   // let the user pick a category from a selector at the top of the form.
   const initialCategory = route.params?.categoryName || '';
   const [categoryName, setCategoryName] = useState(initialCategory);
+
+  useEffect(() => {
+    if (route.params?.categoryName) setCategoryName(route.params.categoryName);
+  }, [route.params?.categoryName]);
 
   const [title, setTitle] = useState('');
   const [priceOrSalary, setPriceOrSalary] = useState('');
