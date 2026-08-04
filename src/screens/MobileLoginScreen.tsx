@@ -1,27 +1,49 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { sendOtp, verifyOtp } from '../services/authService';
 
 export default function MobileLoginScreen({ navigation }: any) {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [confirmation, setConfirmation] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     if (phoneNumber.length < 10) {
       Alert.alert('Error', 'Please enter a valid 10-digit mobile number');
       return;
     }
-    setOtpSent(true);
-    Alert.alert('OTP Sent', 'Verification code sent to your phone number.');
+    setLoading(true);
+    try {
+      const fullNumber = '+91' + phoneNumber;
+      const confirmationResult = await sendOtp(fullNumber);
+      setConfirmation(confirmationResult);
+      setOtpSent(true);
+      Alert.alert('OTP Sent', 'Verification code sent to your phone number.');
+    } catch (error: any) {
+      console.error('OTP send error:', error);
+      Alert.alert('Error', error.message || 'Failed to send OTP');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleVerifyOtp = () => {
-    if (otp.length < 4) {
-      Alert.alert('Error', 'Please enter a valid OTP');
+  const handleVerifyOtp = async () => {
+    if (otp.length < 6) {
+      Alert.alert('Error', 'Please enter a valid 6-digit OTP');
       return;
     }
-    Alert.alert('Success', 'Phone number verified successfully!');
-    navigation.replace('MainApp');
+    setLoading(true);
+    try {
+      await verifyOtp(confirmation, otp);
+      navigation.replace('MainApp');
+    } catch (error: any) {
+      console.error('OTP verify error:', error);
+      Alert.alert('Error', 'Invalid OTP, please try again');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -40,33 +62,28 @@ export default function MobileLoginScreen({ navigation }: any) {
             value={phoneNumber}
             onChangeText={setPhoneNumber}
           />
-
-          <TouchableOpacity style={styles.button} onPress={handleSendOtp}>
-            <Text style={styles.buttonText}>Send OTP</Text>
+          <TouchableOpacity style={styles.button} onPress={handleSendOtp} disabled={loading}>
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Send OTP</Text>}
           </TouchableOpacity>
         </>
       ) : (
         <>
           <TextInput
             style={styles.input}
-            placeholder="Enter 4-digit OTP"
+            placeholder="Enter 6-digit OTP"
             placeholderTextColor="#888"
             keyboardType="number-pad"
-            maxLength={4}
+            maxLength={6}
             value={otp}
             onChangeText={setOtp}
           />
-
-          <TouchableOpacity style={styles.button} onPress={handleVerifyOtp}>
-            <Text style={styles.buttonText}>Verify & Login</Text>
+          <TouchableOpacity style={styles.button} onPress={handleVerifyOtp} disabled={loading}>
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Verify & Login</Text>}
           </TouchableOpacity>
         </>
       )}
 
-      <TouchableOpacity 
-        style={styles.linkButton} 
-        onPress={() => navigation.goBack()}
-      >
+      <TouchableOpacity style={styles.linkButton} onPress={() => navigation.goBack()}>
         <Text style={styles.linkText}>Back to Email Login</Text>
       </TouchableOpacity>
     </View>
@@ -74,53 +91,12 @@ export default function MobileLoginScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 20,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 24,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 14,
-    fontSize: 16,
-    marginBottom: 16,
-    color: '#333',
-  },
-  button: {
-    backgroundColor: '#2e7d32',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  linkButton: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  linkText: {
-    color: '#2e7d32',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
+  container: { flex: 1, backgroundColor: '#f5f5f5', padding: 20, justifyContent: 'center' },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#333', marginBottom: 6 },
+  subtitle: { fontSize: 14, color: '#666', marginBottom: 24 },
+  input: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 14, fontSize: 16, marginBottom: 16, color: '#333' },
+  button: { backgroundColor: '#2e7d32', paddingVertical: 14, borderRadius: 8, alignItems: 'center', marginTop: 10 },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  linkButton: { marginTop: 20, alignItems: 'center' },
+  linkText: { color: '#2e7d32', fontSize: 14, fontWeight: 'bold' },
 });
-
