@@ -1,7 +1,8 @@
-import { getApp } from '@react-native-firebase/app';
-import { getAuth } from '@react-native-firebase/auth';
-import { getFirestore } from '@react-native-firebase/firestore';
+import '@react-native-firebase/app';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
-export const app = getApp();
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const firebaseAuth = auth();
+export const db = firestore();
+
+export { firebaseAuth as auth };
