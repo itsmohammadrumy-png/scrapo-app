@@ -21,11 +21,17 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v2
 
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm install
+
     - name: Grant execute permission for gradlew
       run: cd android && chmod +x gradlew
-
-    - name: Print Signing Report (SHA-1 & SHA-256)
-      run: cd android && ./gradlew signingReport
 
     - name: Build Release APK
       run: |
