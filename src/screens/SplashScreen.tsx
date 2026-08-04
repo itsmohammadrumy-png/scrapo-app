@@ -6,8 +6,9 @@ export default function SplashScreen({ navigation }: any) {
     const timer = setTimeout(() => {
       navigation.replace('Login');
     }, 2000);
+
     return () => clearTimeout(timer);
-  }, []);
+  }, [navigation]);
 
   return (
     <View style={styles.container}>
@@ -20,19 +21,18 @@ export default function SplashScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#2E7D32',
     justifyContent: 'center',
     alignItems: 'center',
   },
   logo: {
     fontSize: 40,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#FFFFFF',
   },
   tagline: {
     fontSize: 16,
-    color: '#e8f5e9',
+    color: '#E8F5E9',
     marginTop: 8,
   },
 });
-
