@@ -1,4 +1,7 @@
 {
   "name": "ScrapoApp",
-  "displayName": "ScrapoApp"
+  "displayName": "ScrapoApp",
+  "plugins": [
+    "expo-asset"
+  ]
 }
