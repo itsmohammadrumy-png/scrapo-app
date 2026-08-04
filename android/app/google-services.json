@@ -1,44 +1,26 @@
 {
   "project_info": {
-    "project_number": "1061769480383",
-    "project_id": "scrapo-1276",
-    "storage_bucket": "scrapo-1276.firebasestorage.app"
+    "project_number": "360685510749",
+    "project_id": "scrapo-ae8fc",
+    "storage_bucket": "scrapo-ae8fc.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1061769480383:android:01eab4ab029af144165e0a",
+        "mobilesdk_app_id": "1:360685510749:android:b031dafa83806557076db4",
         "android_client_info": {
-          "package_name": "com.scrapo.app"
+          "package_name": "com.scrapoapp"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "1061769480383-t3u5lmrsu9d5og5kt7mb6mibal8gbsh6.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.scrapo.app",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
-          }
-        },
-        {
-          "client_id": "1061769480383-gloq5uo0blvrlfr5gvl5mit71m0gl21h.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCdFvose4ohvsiG8aT03G0obxvjR4DVNLI"
+          "current_key": "AIzaSyCdFIjwE4FXpuJgKZlhg1ymHw0ttCQ7ccE"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "1061769480383-gloq5uo0blvrlfr5gvl5mit71m0gl21h.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }
