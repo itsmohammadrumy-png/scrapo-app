@@ -1,27 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import { View, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Text } from 'react-native';
+import { collection, addDoc, doc, updateDoc, query, orderBy, onSnapshot, serverTimestamp } from '@react-native-firebase/firestore';
+import { db, auth } from '../config/firebase';
 
 export default function ChatDetailScreen({ route, navigation }: any) {
   const { chatId, recipientName } = route.params;
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState('');
-  const currentUid = auth().currentUser?.uid;
+  const currentUid = auth.currentUser?.uid;
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     navigation.setOptions({ title: recipientName || 'Chat' });
 
-    const unsubscribe = firestore()
-      .collection('chats')
-      .doc(chatId)
-      .collection('messages')
-      .orderBy('timestamp', 'asc')
-      .onSnapshot((snapshot) => {
-        const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setMessages(data);
-      });
+    const messagesRef = collection(db, 'chats', chatId, 'messages');
+    const q = query(messagesRef, orderBy('timestamp', 'asc'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setMessages(data);
+    });
 
     return () => unsubscribe();
   }, [chatId]);
@@ -32,15 +30,16 @@ export default function ChatDetailScreen({ route, navigation }: any) {
     setText('');
 
     try {
-      await firestore().collection('chats').doc(chatId).collection('messages').add({
+      const messagesRef = collection(db, 'chats', chatId, 'messages');
+      await addDoc(messagesRef, {
         senderId: currentUid,
         text: messageText,
-        timestamp: firestore.FieldValue.serverTimestamp(),
+        timestamp: serverTimestamp(),
       });
 
-      await firestore().collection('chats').doc(chatId).update({
+      await updateDoc(doc(db, 'chats', chatId), {
         lastMessage: messageText,
-        lastMessageAt: firestore.FieldValue.serverTimestamp(),
+        lastMessageAt: serverTimestamp(),
       });
     } catch (error) {
       console.error('Error sending message:', error);
@@ -109,9 +108,6 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: '#f0f0f0', borderRadius: 20, paddingHorizontal: 16,
     paddingVertical: 10, fontSize: 14, maxHeight: 100, marginRight: 8,
   },
-  sendButton: {
-    backgroundColor: '#2e7d32', width: 42, height: 42, borderRadius: 21,
-    justifyContent: 'center', alignItems: 'center',
-  },
+  sendButton: { backgroundColor: '#2e7d32', width: 42, height: 42, borderRadius: 21, justifyContent: 'center', alignItems: 'center' },
   sendButtonText: { color: '#fff', fontSize: 18 },
 });

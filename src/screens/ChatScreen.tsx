@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot } from '@react-native-firebase/firestore';
 import { db, auth } from '../config/firebase';
 
 export default function ChatScreen({ navigation }: any) {
@@ -16,7 +16,6 @@ export default function ChatScreen({ navigation }: any) {
       return;
     }
 
-    // Real-time listener — పెద్ద apps ఇలాగే చేస్తాయి, fetch-on-focus కాదు
     const q = query(
       collection(db, 'chats'),
       where('participants', 'array-contains', currentUid),
@@ -38,7 +37,6 @@ export default function ChatScreen({ navigation }: any) {
       }
     );
 
-    // Screen unmount అయినప్పుడు listener క్లీన్ చేయాలి — లేకపోతే memory leak
     return () => unsubscribe();
   }, [currentUid]);
 
@@ -76,10 +74,7 @@ export default function ChatScreen({ navigation }: any) {
         </View>
         <View style={styles.chatInfo}>
           <Text style={[styles.chatName, unread > 0 && styles.boldText]}>{chatTitle}</Text>
-          <Text
-            style={[styles.chatMsg, unread > 0 && styles.boldText]}
-            numberOfLines={1}
-          >
+          <Text style={[styles.chatMsg, unread > 0 && styles.boldText]} numberOfLines={1}>
             {lastMsg}
           </Text>
         </View>
@@ -111,11 +106,7 @@ export default function ChatScreen({ navigation }: any) {
           <Text style={styles.subNoDataText}>Chats from marketplace listings and scrap sales will appear here.</Text>
         </View>
       ) : (
-        <FlatList
-          data={chats}
-          keyExtractor={(item) => item.id}
-          renderItem={renderChatItem}
-        />
+        <FlatList data={chats} keyExtractor={(item) => item.id} renderItem={renderChatItem} />
       )}
     </View>
   );

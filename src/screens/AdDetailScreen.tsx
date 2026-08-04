@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Dimensions } from 'react-native';
-import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import { collection, query, where, getDocs, addDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import { db, auth } from '../config/firebase';
 
 const { width } = Dimensions.get('window');
 
 export default function AdDetailScreen({ route, navigation }: any) {
   const { item } = route.params;
   const [loading, setLoading] = useState(false);
-  const currentUid = auth().currentUser?.uid;
+  const currentUid = auth.currentUser?.uid;
 
   const attributes = item.attributes || {};
   const attributeEntries = Object.entries(attributes).filter(([_, v]) => v);
@@ -29,21 +29,23 @@ export default function AdDetailScreen({ route, navigation }: any) {
 
     setLoading(true);
     try {
-      const chatsRef = firestore().collection('chats');
-      const existing = await chatsRef
-        .where('participants', 'array-contains', currentUid)
-        .where('relatedListingId', '==', item.id)
-        .get();
+      const chatsRef = collection(db, 'chats');
+      const q = query(
+        chatsRef,
+        where('participants', 'array-contains', currentUid),
+        where('relatedListingId', '==', item.id)
+      );
+      const existing = await getDocs(q);
 
       let chatId = existing.empty ? null : existing.docs[0].id;
 
       if (!chatId) {
-        const newChat = await chatsRef.add({
+        const newChat = await addDoc(chatsRef, {
           participants: [currentUid, item.sellerId],
           relatedListingId: item.id,
           productTitle: item.title || item.category,
           lastMessage: '',
-          lastMessageAt: firestore.FieldValue.serverTimestamp(),
+          lastMessageAt: serverTimestamp(),
           unreadCount: {},
           participantNames: {
             [item.sellerId]: item.sellerName || 'Seller',
@@ -127,8 +129,6 @@ const styles = StyleSheet.create({
   attrLine: { fontSize: 13, color: '#555', marginBottom: 4 },
   description: { fontSize: 14, color: '#555', lineHeight: 20 },
   sellerName: { fontSize: 14, color: '#333', fontWeight: '600' },
-  contactButton: {
-    backgroundColor: '#2e7d32', margin: 16, padding: 16, borderRadius: 10, alignItems: 'center',
-  },
+  contactButton: { backgroundColor: '#2e7d32', margin: 16, padding: 16, borderRadius: 10, alignItems: 'center' },
   contactButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });

@@ -1,28 +1,18 @@
 import React, { useState, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ActivityIndicator, 
-  Alert,
-  StatusBar,
-  Modal,
-  TextInput,
-  Image,
-  ScrollView,
-  Share
+import {
+  View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert,
+  StatusBar, Modal, TextInput, Image, ScrollView, Share,
 } from 'react-native';
-import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, deleteDoc, doc } from '@react-native-firebase/firestore';
+import { updateProfile, signOut } from '@react-native-firebase/auth';
 import { db, auth } from '../config/firebase';
-import { signOut, updateProfile } from 'firebase/auth';
 import { useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function ProfileScreen({ navigation }: any) {
   const [userListings, setUserListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [photoURL, setPhotoURL] = useState('');
@@ -37,28 +27,9 @@ export default function ProfileScreen({ navigation }: any) {
       setDisplayName(currentUser.displayName || '');
       setPhotoURL(currentUser.photoURL || '');
 
-      const q = query(
-        collection(db, 'marketplaceListings'),
-        where('sellerId', '==', currentUser.uid)
-      );
-      const querySnapshot = await getDocs(q);
-      let listings = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
-      if (listings.length === 0) {
-        const qAlt = query(
-          collection(db, 'marketplaceListings'),
-          where('userId', '==', currentUser.uid)
-        );
-        const snapshotAlt = await getDocs(qAlt);
-        listings = snapshotAlt.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-      }
-
+      const q = query(collection(db, 'marketplaceListings'), where('sellerId', '==', currentUser.uid));
+      const snapshot = await getDocs(q);
+      const listings = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
       setUserListings(listings);
     } catch (error) {
       console.error('Error fetching user listings:', error);
@@ -77,16 +48,13 @@ export default function ProfileScreen({ navigation }: any) {
     if (!currentUser) return;
     try {
       setUpdating(true);
-      await updateProfile(currentUser, {
-        displayName: displayName,
-        photoURL: photoURL
-      });
-      Alert.alert("Success", "ప్రొఫైల్ విజయవంతంగా అప్‌డేట్ చేయబడింది!");
+      await updateProfile(currentUser, { displayName, photoURL });
+      Alert.alert('Success', 'ప్రొఫైల్ విజయవంతంగా అప్‌డేట్ చేయబడింది!');
       setIsEditModalVisible(false);
       fetchUserDataAndListings();
     } catch (error) {
-      console.error("Error updating profile:", error);
-      Alert.alert("Error", "ప్రొఫైల్ అప్‌డేట్ చేయడంలో సమస్య వచ్చింది.");
+      console.error('Error updating profile:', error);
+      Alert.alert('Error', 'ప్రొఫైల్ అప్‌డేట్ చేయడంలో సమస్య వచ్చింది.');
     } finally {
       setUpdating(false);
     }
@@ -103,55 +71,46 @@ export default function ProfileScreen({ navigation }: any) {
   };
 
   const handleDeleteListing = async (listingId: string) => {
-    Alert.alert(
-      "Delete Listing",
-      "మీరు నిజంగా ఈ యాడ్‌ని డిలీట్ చేయాలనుకుంటున్నారా?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Delete", 
-          style: "destructive", 
-          onPress: async () => {
-            try {
-              await deleteDoc(doc(db, 'marketplaceListings', listingId));
-              setUserListings(prev => prev.filter(item => item.id !== listingId));
-              Alert.alert("Success", "యాడ్ విజయవంతంగా డిలీట్ చేయబడింది.");
-            } catch (error) {
-              console.error("Error deleting listing: ", error);
-              Alert.alert("Error", "యాడ్ డిలీట్ చేయడంలో సమస్య వచ్చింది.");
-            }
+    Alert.alert('Delete Listing', 'మీరు నిజంగా ఈ యాడ్‌ని డిలీట్ చేయాలనుకుంటున్నారా?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteDoc(doc(db, 'marketplaceListings', listingId));
+            setUserListings((prev) => prev.filter((item) => item.id !== listingId));
+            Alert.alert('Success', 'యాడ్ విజయవంతంగా డిలీట్ చేయబడింది.');
+          } catch (error) {
+            console.error('Error deleting listing: ', error);
+            Alert.alert('Error', 'యాడ్ డిలీట్ చేయడంలో సమస్య వచ్చింది.');
           }
-        }
-      ]
-    );
+        },
+      },
+    ]);
   };
 
   const handleLogout = async () => {
-    Alert.alert(
-      "Logout",
-      "మీరు నిజంగా లాగౌట్ అవ్వాలనుకుంటున్నారా?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Logout", 
-          style: "destructive", 
-          onPress: async () => {
-            try {
-              await signOut(auth);
-              navigation.replace('Login');
-            } catch (error) {
-              console.error('Logout error:', error);
-            }
+    Alert.alert('Logout', 'మీరు నిజంగా లాగౌట్ అవ్వాలనుకుంటున్నారా?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await signOut(auth);
+          } catch (error) {
+            console.error('Logout error:', error);
           }
-        }
-      ]
-    );
+        },
+      },
+    ]);
   };
 
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="#fff" barStyle="dark-content" />
-      
+
       <View style={styles.topNav}>
         <Text style={styles.profileHeaderTitle}>Profile</Text>
         <TouchableOpacity>
@@ -160,7 +119,6 @@ export default function ProfileScreen({ navigation }: any) {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-        
         <View style={styles.headerCard}>
           <View style={styles.profileTopRow}>
             <View style={styles.avatarContainer}>
@@ -179,12 +137,9 @@ export default function ProfileScreen({ navigation }: any) {
             </View>
 
             <View style={styles.userInfo}>
-              <Text style={styles.userName} numberOfLines={1}>
-                {currentUser?.displayName || 'Scrapo User'}
-              </Text>
+              <Text style={styles.userName} numberOfLines={1}>{currentUser?.displayName || 'Scrapo User'}</Text>
               <Text style={styles.userPhone}>{currentUser?.phoneNumber || '+91 98765 43210'}</Text>
               <Text style={styles.userEmail} numberOfLines={1}>{currentUser?.email || ''}</Text>
-              
               <View style={styles.verifiedRow}>
                 <Ionicons name="checkmark-circle" size={14} color="#2e7d32" />
                 <Text style={styles.verifiedText}>Verified</Text>
@@ -247,18 +202,14 @@ export default function ProfileScreen({ navigation }: any) {
 
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>My Posted Ads</Text>
-          <TouchableOpacity>
-            <Text style={styles.viewAllText}>View All →</Text>
-          </TouchableOpacity>
+          <TouchableOpacity><Text style={styles.viewAllText}>View All →</Text></TouchableOpacity>
         </View>
 
         {loading ? (
           <ActivityIndicator size="large" color="#2e7d32" style={{ marginTop: 20 }} />
         ) : userListings.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <View style={styles.plusCircle}>
-              <Ionicons name="add" size={24} color="#2e7d32" />
-            </View>
+            <View style={styles.plusCircle}><Ionicons name="add" size={24} color="#2e7d32" /></View>
             <Text style={styles.noDataText}>You haven't posted any ads yet.</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Sell')} style={styles.postFirstAdBtn}>
               <Text style={styles.postFirstAdText}>Post Your First Ad</Text>
@@ -277,10 +228,7 @@ export default function ProfileScreen({ navigation }: any) {
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity 
-                style={styles.deleteButton} 
-                onPress={() => handleDeleteListing(item.id)}
-              >
+              <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteListing(item.id)}>
                 <Text style={styles.deleteButtonText}>Delete</Text>
               </TouchableOpacity>
             </View>
@@ -334,53 +282,22 @@ export default function ProfileScreen({ navigation }: any) {
           <Ionicons name="log-out-outline" size={18} color="#c62828" style={{ marginRight: 6 }} />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
-
       </ScrollView>
 
-      <Modal
-        visible={isEditModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsEditModalVisible(false)}
-      >
+      <Modal visible={isEditModalVisible} animationType="slide" transparent onRequestClose={() => setIsEditModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit Profile</Text>
-            
             <Text style={styles.inputLabel}>Full Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="మీ పేరు ఎంటర్ చేయండి"
-              value={displayName}
-              onChangeText={setDisplayName}
-            />
-
+            <TextInput style={styles.input} placeholder="మీ పేరు ఎంటర్ చేయండి" value={displayName} onChangeText={setDisplayName} />
             <Text style={styles.inputLabel}>Profile Picture URL</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="ఫొటో లింక్ (URL) ఇవ్వండి"
-              value={photoURL}
-              onChangeText={setPhotoURL}
-            />
-
+            <TextInput style={styles.input} placeholder="ఫొటో లింక్ (URL) ఇవ్వండి" value={photoURL} onChangeText={setPhotoURL} />
             <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={[styles.modalBtn, styles.cancelBtn]} 
-                onPress={() => setIsEditModalVisible(false)}
-              >
+              <TouchableOpacity style={[styles.modalBtn, styles.cancelBtn]} onPress={() => setIsEditModalVisible(false)}>
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.modalBtn, styles.saveBtn]} 
-                onPress={handleUpdateProfile}
-                disabled={updating}
-              >
-                {updating ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.saveBtnText}>Save</Text>
-                )}
+              <TouchableOpacity style={[styles.modalBtn, styles.saveBtn]} onPress={handleUpdateProfile} disabled={updating}>
+                {updating ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.saveBtnText}>Save</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -394,113 +311,34 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8f9fa', paddingHorizontal: 16 },
   topNav: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 40, paddingBottom: 10 },
   profileHeaderTitle: { fontSize: 20, fontWeight: 'bold', color: '#333' },
-  headerCard: {
-    backgroundColor: '#fff', 
-    padding: 16, 
-    borderRadius: 14,
-    marginBottom: 15, 
-    elevation: 2, 
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 }, 
-    shadowOpacity: 0.1, 
-    shadowRadius: 3,
-  },
+  headerCard: { backgroundColor: '#fff', padding: 16, borderRadius: 14, marginBottom: 15, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3 },
   profileTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
   avatarContainer: { position: 'relative', marginRight: 12 },
-  avatar: {
-    width: 60, 
-    height: 60, 
-    borderRadius: 30, 
-    backgroundColor: '#2e7d32',
-    justifyContent: 'center', 
-    alignItems: 'center', 
-  },
-  avatarImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-  },
+  avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#2e7d32', justifyContent: 'center', alignItems: 'center' },
+  avatarImage: { width: 60, height: 60, borderRadius: 30 },
   avatarText: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
-  cameraBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#2e7d32',
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#fff'
-  },
+  cameraBadge: { position: 'absolute', bottom: 0, right: 0, backgroundColor: '#2e7d32', width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#fff' },
   userInfo: { flex: 1 },
   userName: { fontSize: 16, fontWeight: 'bold', color: '#333' },
   userPhone: { fontSize: 12, color: '#555', marginTop: 2 },
   userEmail: { fontSize: 12, color: '#666', marginTop: 1 },
   verifiedRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   verifiedText: { fontSize: 11, color: '#2e7d32', fontWeight: 'bold', marginLeft: 3 },
-  editProfileBtn: { 
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e8f5e9', 
-    paddingVertical: 6, 
-    paddingHorizontal: 10, 
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#c8e6c9'
-  },
+  editProfileBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e8f5e9', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20, borderWidth: 1, borderColor: '#c8e6c9' },
   editProfileText: { color: '#2e7d32', fontWeight: 'bold', fontSize: 11 },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#f9f9f9',
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 5,
-    borderWidth: 1,
-    borderColor: '#eee'
-  },
+  statsRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#f9f9f9', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 5, borderWidth: 1, borderColor: '#eee' },
   statBox: { flex: 1, alignItems: 'center' },
   statDivider: { width: 1, backgroundColor: '#ddd', height: '80%', alignSelf: 'center' },
   statNumber: { fontSize: 14, fontWeight: 'bold', color: '#333', marginTop: 2 },
   statLabel: { fontSize: 10, color: '#666', marginTop: 1 },
-  coinCard: {
-    flexDirection: 'row',
-    backgroundColor: '#e8f5e9',
-    padding: 16,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#c8e6c9'
-  },
+  coinCard: { flexDirection: 'row', backgroundColor: '#e8f5e9', padding: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, borderWidth: 1, borderColor: '#c8e6c9' },
   coinInfo: { flex: 1 },
   coinTitle: { fontSize: 14, fontWeight: 'bold', color: '#2e7d32' },
   coinCount: { fontSize: 16, fontWeight: 'bold', color: '#1b5e20', marginTop: 2 },
   coinSubText: { fontSize: 11, color: '#555', marginTop: 2 },
-  referBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2e7d32',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20
-  },
+  referBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#2e7d32', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 20 },
   referBtnText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
-  supportCard: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 14,
-    borderRadius: 14,
-    marginBottom: 15,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 1,
-    borderWidth: 1,
-    borderColor: '#eee'
-  },
+  supportCard: { flexDirection: 'row', backgroundColor: '#fff', padding: 14, borderRadius: 14, marginBottom: 15, alignItems: 'center', justifyContent: 'space-between', elevation: 1, borderWidth: 1, borderColor: '#eee' },
   supportTitle: { fontSize: 14, fontWeight: 'bold', color: '#333' },
   supportSubText: { fontSize: 12, color: '#666', marginTop: 2 },
   supportEmail: { fontSize: 11, color: '#2e7d32', fontWeight: '600', marginTop: 2 },
@@ -508,117 +346,35 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#333' },
   sectionTitleAccount: { fontSize: 16, fontWeight: 'bold', color: '#333', marginTop: 10, marginBottom: 10 },
   viewAllText: { fontSize: 13, color: '#2e7d32', fontWeight: 'bold' },
-  emptyContainer: { 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderStyle: 'dashed',
-    marginBottom: 15
-  },
-  plusCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#e8f5e9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8
-  },
+  emptyContainer: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: 14, padding: 24, borderWidth: 1, borderColor: '#e0e0e0', borderStyle: 'dashed', marginBottom: 15 },
+  plusCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#e8f5e9', justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
   noDataText: { fontSize: 13, color: '#666', marginBottom: 12 },
-  postFirstAdBtn: {
-    backgroundColor: '#2e7d32',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8
-  },
+  postFirstAdBtn: { backgroundColor: '#2e7d32', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8 },
   postFirstAdText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
-  accountCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#eee',
-    overflow: 'hidden',
-    marginBottom: 15,
-  },
-  accountItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f1f1'
-  },
+  accountCard: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#eee', overflow: 'hidden', marginBottom: 15 },
+  accountItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#f1f1f1' },
   accountItemLeft: { flexDirection: 'row', alignItems: 'center' },
   accountItemText: { fontSize: 14, color: '#333', marginLeft: 12, fontWeight: '500' },
-  logoutButton: { 
-    flexDirection: 'row',
-    backgroundColor: '#fff', 
-    padding: 14, 
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#ffcdd2'
-  },
+  logoutButton: { flexDirection: 'row', backgroundColor: '#fff', padding: 14, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ffcdd2' },
   logoutText: { color: '#c62828', fontWeight: 'bold', fontSize: 14 },
-  listingCard: {
-    flexDirection: 'row', 
-    backgroundColor: '#fff', 
-    padding: 14, 
-    borderRadius: 12,
-    alignItems: 'center', 
-    marginBottom: 10, 
-    borderWidth: 1,
-    borderColor: '#eee'
-  },
+  listingCard: { flexDirection: 'row', backgroundColor: '#fff', padding: 14, borderRadius: 12, alignItems: 'center', marginBottom: 10, borderWidth: 1, borderColor: '#eee' },
   listingInfo: { flex: 1, marginRight: 10 },
   listingTitle: { fontSize: 15, fontWeight: 'bold', color: '#333' },
   listingPrice: { fontSize: 14, color: '#2e7d32', fontWeight: 'bold', marginTop: 3 },
   badgeContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   listingCategory: { fontSize: 11, color: '#666', backgroundColor: '#f1f3f5', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, overflow: 'hidden' },
   listingDate: { fontSize: 11, color: '#999', marginLeft: 8 },
-  deleteButton: { 
-    backgroundColor: '#ffebee', 
-    paddingVertical: 8, 
-    paddingHorizontal: 12, 
-    borderRadius: 6 
-  },
+  deleteButton: { backgroundColor: '#ffebee', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 6 },
   deleteButtonText: { color: '#c62828', fontSize: 12, fontWeight: 'bold' },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    width: '100%',
-    borderRadius: 14,
-    padding: 20,
-    elevation: 5
-  },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#fff', width: '100%', borderRadius: 14, padding: 20, elevation: 5 },
   modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 15, textAlign: 'center' },
   inputLabel: { fontSize: 13, color: '#555', marginBottom: 5, fontWeight: '600' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 14,
-    marginBottom: 15,
-    backgroundColor: '#f9f9f9'
-  },
+  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, fontSize: 14, marginBottom: 15, backgroundColor: '#f9f9f9' },
   modalButtons: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
   modalBtn: { flex: 1, padding: 12, borderRadius: 8, alignItems: 'center' },
   cancelBtn: { backgroundColor: '#f1f3f5', marginRight: 10 },
   cancelBtnText: { color: '#555', fontWeight: 'bold' },
   saveBtn: { backgroundColor: '#2e7d32' },
-  saveBtnText: { color: '#fff', fontWeight: 'bold' }
+  saveBtnText: { color: '#fff', fontWeight: 'bold' },
 });
-
