@@ -14,14 +14,6 @@
       },
       "oauth_client": [
         {
-          "client_id": "360685510749-9m7p0evbhej3gj3eitmtl72kqslgu7c9.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.scrapoapp",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
-          }
-        },
-        {
           "client_id": "360685510749-cu960merc1j36qbi569mu0uv6in318ai.apps.googleusercontent.com",
           "client_type": 3
         }
