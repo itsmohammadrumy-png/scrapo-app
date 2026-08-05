@@ -1,4 +1,6 @@
 import React from 'react';
+import { enableScreens } from 'react-native-screens';
+enableScreens();
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import './src/localization/i18n';
 import { AuthProvider } from './src/context/AuthContext';
