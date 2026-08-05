@@ -1,31 +1,90 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
 
-// పాత / ఇప్పటికే ఉన్న స్క్రీన్స్ (మార్కెట్‌ప్లేస్ మొదలైనవి) ఇక్కడ ఉంటాయి
-// (మీ ప్రాజెక్ట్ బట్టి అవసరమైనవి ఇక్కడ ఇంపోర్ట్ చేసుకోవచ్చు)
+import { AuthContext } from '../context/AuthContext';
 
-// కొత్తగా మనం యాడ్ చేసిన స్క్రాప్ & పిక్‌అప్ స్క్రీన్స్
-import ScrapPricingScreen from '../screens/ScrapPricingScreen';
-import PickupRequestScreen from '../screens/PickupRequestScreen';
+import HomeScreen from '../screens/HomeScreen';
+import MarketplaceScreen from '../screens/MarketplaceScreen';
+import SellScrapScreen from '../screens/SellScrapScreen';
+import ChatScreen from '../screens/ChatScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+
+import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
+import MobileLoginScreen from '../screens/MobileLoginScreen';
+
+import ScrapUploadScreen from '../screens/ScrapUploadScreen';
+import AdPostScreen from '../screens/AdPostScreen';
+import AdDetailScreen from '../screens/AdDetailScreen';
+import ChatDetailScreen from '../screens/ChatDetailScreen';
 
 const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+function MainTabs() {
+  const { t } = useTranslation();
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: '#2e7d32',
+        tabBarInactiveTintColor: '#999',
+        tabBarIcon: ({ color, size }) => {
+          const icons: any = {
+            Home: 'home',
+            Marketplace: 'cart',
+            Sell: 'add-circle',
+            Chats: 'chatbubbles',
+            Profile: 'person',
+          };
+          return <Icon name={icons[route.name]} size={size} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} options={{ title: t('home') || 'Home' }} />
+      <Tab.Screen name="Marketplace" component={MarketplaceScreen} options={{ title: t('marketplace') || 'Marketplace' }} />
+      <Tab.Screen name="Sell" component={SellScrapScreen} options={{ title: t('sellScrap') || 'Sell' }} />
+      <Tab.Screen name="Chats" component={ChatScreen} options={{ title: t('chats') || 'Chats' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: t('profile') || 'Profile' }} />
+    </Tab.Navigator>
+  );
+}
 
 export default function AppNavigator() {
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#2e7d32' }}>
+        <ActivityIndicator size="large" color="#fff" />
+      </View>
+    );
+  }
+
   return (
-    <Stack.Navigator initialRouteName="ScrapPricing">
-      {/* స్క్రాప్ మార్కెట్ మరియు ప్రైసింగ్ స్క్రీన్ */}
-      <Stack.Screen 
-        name="ScrapPricing" 
-        component={ScrapPricingScreen} 
-        options={{ title: 'Scrap Market & Rates' }} 
-      />
-      
-      {/* పిక్‌అప్ రిక్వెస్ట్ స్క్రీన్ */}
-      <Stack.Screen 
-        name="PickupRequest" 
-        component={PickupRequestScreen} 
-        options={{ title: 'Schedule Pickup' }} 
-      />
-    </Stack.Navigator>
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {user ? (
+          <>
+            <Stack.Screen name="MainApp" component={MainTabs} />
+            <Stack.Screen name="ScrapUpload" component={ScrapUploadScreen} options={{ headerShown: true, title: 'Upload Scrap' }} />
+            <Stack.Screen name="AdPost" component={AdPostScreen} options={{ headerShown: true, title: 'Post Ad' }} />
+            <Stack.Screen name="AdDetail" component={AdDetailScreen} options={{ headerShown: true, title: 'Details' }} />
+            <Stack.Screen name="ChatDetail" component={ChatDetailScreen} options={{ headerShown: true }} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="MobileLogin" component={MobileLoginScreen} />
+          </>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
