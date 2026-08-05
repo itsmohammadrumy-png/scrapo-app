@@ -6,16 +6,34 @@ import {
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { addDocument } from '../services/firestoreService';
 import { uploadMultipleImages } from '../services/storageService';
+import { getCurrentLocation, getAddressFromCoordinates } from '../services/locationService';
 import { auth } from '../config/firebase';
 
 export default function ScrapUploadScreen({ route, navigation }: any) {
   const { categoryName } = route.params || { categoryName: 'General Scrap' };
   const [weight, setWeight] = useState('');
   const [address, setAddress] = useState('');
+  const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [description, setDescription] = useState('');
   const [visibilityMode, setVisibilityMode] = useState<'public' | 'pickup_booking'>('public');
   const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [locating, setLocating] = useState(false);
+
+  const handleUseCurrentLocation = async () => {
+    setLocating(true);
+    try {
+      const coords = await getCurrentLocation();
+      setCoordinates(coords);
+      const addr = await getAddressFromCoordinates(coords.latitude, coords.longitude);
+      setAddress(addr);
+    } catch (error) {
+      console.error('Location error:', error);
+      Alert.alert('Error', 'Could not get your location. Please enter address manually.');
+    } finally {
+      setLocating(false);
+    }
+  };
 
   const handlePickImage = () => {
     if (photos.length >= 5) {
@@ -70,6 +88,8 @@ export default function ScrapUploadScreen({ route, navigation }: any) {
         category: categoryName,
         weightKg: weight,
         address,
+        latitude: coordinates?.latitude || null,
+        longitude: coordinates?.longitude || null,
         description,
         photos: uploadedUrls,
         visibilityMode,
@@ -126,6 +146,13 @@ export default function ScrapUploadScreen({ route, navigation }: any) {
         />
 
         <Text style={styles.label}>Pickup Address / Location</Text>
+        <TouchableOpacity style={styles.locationBtn} onPress={handleUseCurrentLocation} disabled={locating}>
+          {locating ? (
+            <ActivityIndicator size="small" color="#2e7d32" />
+          ) : (
+            <Text style={styles.locationBtnText}>📍 Use Current Location</Text>
+          )}
+        </TouchableOpacity>
         <TextInput
           style={[styles.input, styles.textArea]}
           placeholder="Enter complete address"
@@ -194,6 +221,11 @@ const styles = StyleSheet.create({
     borderRadius: 10, justifyContent: 'center', alignItems: 'center',
   },
   removeBtnText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
+  locationBtn: {
+    borderWidth: 1, borderColor: '#2e7d32', borderRadius: 8, padding: 10,
+    alignItems: 'center', marginBottom: 8, backgroundColor: '#e8f5e9',
+  },
+  locationBtnText: { color: '#2e7d32', fontWeight: 'bold', fontSize: 13 },
   visibilityRow: { gap: 10 },
   visibilityBtn: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginBottom: 8 },
   visibilityBtnActive: { borderColor: '#2e7d32', backgroundColor: '#e8f5e9' },
