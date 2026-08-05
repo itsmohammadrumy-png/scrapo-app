@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Modal, FlatList } from 'react-native';
 import { addDocument } from '../services/firestoreService';
 import { MARKET_CATEGORIES } from '../constants/marketCategories';
+import { getCurrentLocation, getAddressFromCoordinates } from '../services/locationService';
+import { auth } from '../config/firebase';
 
 export default function AdPostScreen({ route, navigation }: any) {
-  // If a categoryName was passed in (e.g. user had a category selected on
-  // the Marketplace screen), start with that. Otherwise start empty and
-  // let the user pick a category from a selector at the top of the form.
   const initialCategory = route.params?.categoryName || '';
   const [categoryName, setCategoryName] = useState(initialCategory);
 
@@ -18,10 +17,24 @@ export default function AdPostScreen({ route, navigation }: any) {
   const [priceOrSalary, setPriceOrSalary] = useState('');
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
-  const [location, setLocation] = useState('Guntur, Andhra Pradesh');
+  const [location, setLocation] = useState('');
+  const [locating, setLocating] = useState(false);
   const [description, setDescription] = useState('');
 
-  // Dynamic fields
+  const handleUseCurrentLocation = async () => {
+    setLocating(true);
+    try {
+      const coords = await getCurrentLocation();
+      const addr = await getAddressFromCoordinates(coords.latitude, coords.longitude);
+      setLocation(addr);
+    } catch (error) {
+      console.error('Location error:', error);
+      Alert.alert('Error', 'Could not get your location.');
+    } finally {
+      setLocating(false);
+    }
+  };
+
   const [ram, setRam] = useState('');
   const [storage, setStorage] = useState('');
   const [fuelType, setFuelType] = useState('');
@@ -35,9 +48,9 @@ export default function AdPostScreen({ route, navigation }: any) {
   const [listingType, setListingType] = useState('');
   const [jobType, setJobType] = useState('');
   const [experience, setExperience] = useState('');
-  const [jobListingType, setJobListingType] = useState(''); // 'Hiring' or 'Looking for Job'
-  const [educationQualification, setEducationQualification] = useState(''); // job seeker's education
-  const [minQualification, setMinQualification] = useState(''); // employer's requirement
+  const [jobListingType, setJobListingType] = useState('');
+  const [educationQualification, setEducationQualification] = useState('');
+  const [minQualification, setMinQualification] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [skills, setSkills] = useState('');
   const [preferredJobLocation, setPreferredJobLocation] = useState('');
@@ -47,112 +60,88 @@ export default function AdPostScreen({ route, navigation }: any) {
   const [petAge, setPetAge] = useState('');
   const [serviceCategory, setServiceCategory] = useState('');
 
-  // Manual "Others" text entries — one per field that supports a custom typed value
   const [customValues, setCustomValues] = useState<{ [key: string]: string }>({});
   const isOther = (val: string) => val === 'Others' || val === 'Other';
   const setCustomValue = (field: string, text: string) => {
     setCustomValues(prev => ({ ...prev, [field]: text }));
   };
 
-  // Images state
   const [images, setImages] = useState<string[]>(['', '']);
   const [loading, setLoading] = useState(false);
 
-  // Modal states
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState('');
   const [modalData, setModalData] = useState<string[]>([]);
 
-  // ---------------------------------------------------------------------
-  // BRAND LISTS (category-specific, no longer mixed together)
-  // ---------------------------------------------------------------------
-  const mobileBrandList = ['Apple', 'Samsung', 'Xiaomi/Redmi', 'OnePlus', 'Vivo', 'Oppo', 'Realme', 'Google', 'Motorola', 'Others'];
-  const laptopBrandList = ['Dell', 'HP', 'Lenovo', 'Asus', 'Acer', 'Apple', 'MSI', 'Microsoft', 'Others'];
-  const carBrandList = ['Maruti Suzuki', 'Hyundai', 'Tata', 'Honda', 'Mahindra', 'Toyota', 'Kia', 'Renault', 'Volkswagen', 'MG', 'Skoda', 'Citroen', 'Nissan', 'Jeep', 'BYD', 'Mercedes-Benz', 'BMW', 'Audi', 'Volvo', 'Others'];
-  const bikeBrandList = ['Hero MotoCorp', 'Honda', 'Bajaj', 'TVS', 'Royal Enfield', 'Yamaha', 'Suzuki', 'Ola Electric', 'Ather', 'Others'];
+  const mobileBrandList = ['Apple', 'Samsung', 'Xiaomi/Redmi', 'OnePlus', 'Vivo', 'Oppo', 'Realme', 'Motorola', 'Others'];
+  const laptopBrandList = ['Dell', 'HP', 'Lenovo', 'Asus', 'Acer', 'Apple', 'MSI', 'Others'];
+  const carBrandList = ['Maruti Suzuki', 'Hyundai', 'Tata', 'Honda', 'Mahindra', 'Toyota', 'Kia', 'Renault', 'Volkswagen', 'MG', 'Skoda', 'Others'];
+  const bikeBrandList = ['Hero MotoCorp', 'Honda', 'Bajaj', 'TVS', 'Royal Enfield', 'Yamaha', 'Suzuki', 'Others'];
 
-  // ---------------------------------------------------------------------
-  // MODEL LISTS keyed by brand (dependent dropdown data)
-  // ---------------------------------------------------------------------
   const mobileModels: { [key: string]: string[] } = {
-    'Apple': ['iPhone 16 Pro Max', 'iPhone 16 Pro', 'iPhone 16 Plus', 'iPhone 16', 'iPhone 16e', 'iPhone 15 Pro Max', 'iPhone 15 Pro', 'iPhone 15 Plus', 'iPhone 15', 'iPhone 14 Pro Max', 'iPhone 14 Pro', 'iPhone 14 Plus', 'iPhone 14', 'iPhone 13 Pro Max', 'iPhone 13 Pro', 'iPhone 13', 'iPhone 13 mini', 'iPhone 12 Pro Max', 'iPhone 12 Pro', 'iPhone 12', 'iPhone 12 mini', 'iPhone 11 Pro Max', 'iPhone 11 Pro', 'iPhone 11', 'iPhone SE (2022)', 'iPhone SE (2020)', 'iPhone XR', 'iPhone XS Max', 'iPhone XS', 'iPhone X', 'Others'],
-    'Samsung': ['Galaxy S25 Ultra', 'Galaxy S25+', 'Galaxy S25', 'Galaxy S24 Ultra', 'Galaxy S24+', 'Galaxy S24', 'Galaxy S23 Ultra', 'Galaxy S23+', 'Galaxy S23', 'Galaxy S23 FE', 'Galaxy S22 Ultra', 'Galaxy S22+', 'Galaxy S22', 'Galaxy S21 Ultra', 'Galaxy S21+', 'Galaxy S21', 'Galaxy S21 FE', 'Galaxy Z Fold 5', 'Galaxy Z Fold 4', 'Galaxy Z Fold 3', 'Galaxy Z Flip 5', 'Galaxy Z Flip 4', 'Galaxy Z Flip 3', 'Galaxy A55', 'Galaxy A54', 'Galaxy A35', 'Galaxy A34', 'Galaxy A25', 'Galaxy A24', 'Galaxy A16', 'Galaxy A15', 'Galaxy A14', 'Galaxy A05', 'Galaxy M55', 'Galaxy M54', 'Galaxy M34', 'Galaxy M14', 'Galaxy F54', 'Galaxy F34', 'Galaxy F16', 'Others'],
-    'Xiaomi/Redmi': ['Redmi Note 13 Pro+', 'Redmi Note 13 Pro', 'Redmi Note 13', 'Redmi Note 12 Pro+', 'Redmi Note 12 Pro', 'Redmi Note 12', 'Redmi Note 11 Pro', 'Redmi Note 11', 'Redmi 13C', 'Redmi 12C', 'Redmi 12', 'Xiaomi 14', 'Xiaomi 13 Pro', 'Xiaomi 13', 'Xiaomi 12', 'POCO X6 Pro', 'POCO X6', 'POCO X5 Pro', 'POCO F5', 'POCO F6', 'POCO M6 Pro', 'Others'],
-    'OnePlus': ['OnePlus 12', 'OnePlus 12R', 'OnePlus 11', 'OnePlus 11R', 'OnePlus 10 Pro', 'OnePlus 10R', 'OnePlus 9 Pro', 'OnePlus 9', 'OnePlus 9R', 'Nord 4', 'Nord CE 4', 'Nord 3', 'Nord CE 3', 'Nord 2T', 'Nord 2', 'Others'],
-    'Vivo': ['V30 Pro', 'V30', 'V29 Pro', 'V29', 'V27 Pro', 'V27', 'Y200', 'Y100', 'Y56', 'Y36', 'Y27', 'T3', 'T2', 'X100', 'X90', 'Others'],
-    'Oppo': ['Reno 12 Pro', 'Reno 11 Pro', 'Reno 11', 'Reno 10 Pro+', 'Reno 10 Pro', 'Reno 8T', 'F25', 'F23', 'F21', 'A98', 'A78', 'A58', 'A38', 'A18', 'Others'],
-    'Realme': ['Realme 12 Pro+', 'Realme 12 Pro', 'Realme 12', 'Realme 11 Pro+', 'Realme 11 Pro', 'Realme 11', 'GT 6', 'GT 5', 'Narzo 70 Pro', 'Narzo 60 Pro', 'Narzo 50', 'C67', 'C65', 'C55', 'C53', 'Others'],
-    'Google': ['Pixel 9 Pro', 'Pixel 9', 'Pixel 8a', 'Pixel 8', 'Others'],
-    'Motorola': ['Edge 50 Pro', 'Edge 50', 'Moto G85', 'Moto G73', 'Moto G54', 'Razr 50', 'Others'],
+    'Apple': ['iPhone 16', 'iPhone 15', 'iPhone 14', 'iPhone 13', 'Others'],
+    'Samsung': ['Galaxy S25', 'Galaxy S24', 'Galaxy A55', 'Galaxy A35', 'Others'],
+    'Xiaomi/Redmi': ['Redmi Note 13', 'Redmi Note 12', 'Xiaomi 14', 'POCO X6', 'Others'],
+    'OnePlus': ['OnePlus 12', 'OnePlus 11', 'Nord 4', 'Nord 3', 'Others'],
+    'Vivo': ['V30', 'V29', 'Y200', 'T3', 'Others'],
+    'Oppo': ['Reno 12', 'Reno 11', 'F25', 'A98', 'Others'],
+    'Realme': ['Realme 12', 'Realme 11', 'GT 6', 'Narzo 70', 'Others'],
+    'Motorola': ['Edge 50', 'Moto G85', 'Razr 50', 'Others'],
     'Others': ['Others'],
   };
 
   const laptopModels: { [key: string]: string[] } = {
-    'Dell': ['Inspiron 15', 'Inspiron 14', 'Inspiron 3000 series', 'Inspiron 5000 series', 'Inspiron 7000 series', 'Vostro', 'Latitude', 'XPS 13', 'XPS 15', 'Alienware', 'Others'],
-    'HP': ['Pavilion', 'Pavilion Gaming', 'Envy', 'Omen', '15s', '14s', 'Victus', 'Spectre', 'ProBook', 'EliteBook', 'Others'],
-    'Lenovo': ['IdeaPad Slim 3', 'IdeaPad Slim 5', 'ThinkPad E14', 'ThinkPad T14', 'ThinkPad X1 Carbon', 'Legion 5', 'Legion 7', 'Yoga series', 'V15', 'Others'],
-    'Asus': ['VivoBook 15', 'VivoBook 14', 'Zenbook', 'ROG Strix', 'TUF Gaming', 'ExpertBook', 'Others'],
-    'Acer': ['Aspire 3', 'Aspire 5', 'Aspire 7', 'Nitro 5', 'Predator', 'Swift', 'TravelMate', 'Others'],
-    'Apple': ['MacBook Air M1', 'MacBook Air M2', 'MacBook Air M3', 'MacBook Pro 13"', 'MacBook Pro 14"', 'MacBook Pro 16"', 'Others'],
-    'MSI': ['Modern 14', 'Katana', 'Cyborg', 'Others'],
-    'Microsoft': ['Surface Laptop', 'Surface Pro', 'Others'],
+    'Dell': ['Inspiron 15', 'Latitude', 'XPS 13', 'Others'],
+    'HP': ['Pavilion', 'Envy', 'Victus', 'Others'],
+    'Lenovo': ['IdeaPad', 'ThinkPad', 'Legion', 'Others'],
+    'Asus': ['VivoBook', 'Zenbook', 'ROG', 'Others'],
+    'Acer': ['Aspire', 'Nitro', 'Swift', 'Others'],
+    'Apple': ['MacBook Air M2', 'MacBook Pro 14"', 'Others'],
+    'MSI': ['Modern 14', 'Katana', 'Others'],
     'Others': ['Others'],
   };
 
   const carModels: { [key: string]: string[] } = {
-    'Maruti Suzuki': ['Swift', 'Baleno', 'Dzire', 'Alto K10', 'WagonR', 'Celerio', 'Ignis', 'S-Presso', 'Fronx', 'Brezza', 'Ertiga', 'XL6', 'Grand Vitara', 'Ciaz', 'Eeco', 'Jimny', 'Invicto', 'Victoris', 'e-Vitara', 'Others'],
-    'Hyundai': ['i10 Nios', 'i20', 'Aura', 'Verna', 'Venue', 'Creta', 'Alcazar', 'Tucson', 'Exter', 'Ioniq 5', 'Others'],
-    'Tata': ['Tiago', 'Tigor', 'Altroz', 'Punch', 'Nexon', 'Harrier', 'Safari', 'Curvv', 'Nexon EV', 'Tigor EV', 'Sierra', 'Sierra EV', 'Harrier EV', 'Others'],
-    'Honda': ['Amaze', 'City', 'Elevate', 'WR-V', 'Jazz', 'ZR-V', 'Others'],
-    'Mahindra': ['Bolero', 'Bolero Neo', 'XUV300', 'XUV400', 'XUV700', 'Scorpio', 'Scorpio-N', 'Thar', 'Marazzo', 'KUV100', 'TUV300', 'Others'],
-    'Toyota': ['Glanza', 'Urban Cruiser Taisor', 'Innova Crysta', 'Innova Hycross', 'Fortuner', 'Camry', 'Hyryder', 'Rumion', 'Hilux', 'Land Cruiser Prado', 'Others'],
-    'Kia': ['Sonet', 'Seltos', 'Carens', 'EV6', 'Syros', 'Syros EV', 'Sorento', 'Others'],
+    'Maruti Suzuki': ['Swift', 'Baleno', 'Dzire', 'Brezza', 'Ertiga', 'Others'],
+    'Hyundai': ['i20', 'Verna', 'Creta', 'Venue', 'Others'],
+    'Tata': ['Tiago', 'Nexon', 'Punch', 'Harrier', 'Others'],
+    'Honda': ['Amaze', 'City', 'Elevate', 'Others'],
+    'Mahindra': ['XUV300', 'XUV700', 'Scorpio', 'Thar', 'Others'],
+    'Toyota': ['Glanza', 'Innova Crysta', 'Fortuner', 'Others'],
+    'Kia': ['Sonet', 'Seltos', 'Carens', 'Others'],
     'Renault': ['Kwid', 'Triber', 'Kiger', 'Others'],
-    'Volkswagen': ['Virtus', 'Taigun', 'Polo', 'Vento', 'Others'],
-    'MG': ['Comet', 'Astor', 'Hector', 'Gloster', 'Windsor EV', 'ZS EV', 'Others'],
-    'Skoda': ['Slavia', 'Kushaq', 'Kodiaq', 'Others'],
-    'Citroen': ['C3', 'C3 Aircross', 'Basalt', 'Others'],
-    'Nissan': ['Magnite', 'Tekton', 'Others'],
-    'Jeep': ['Compass', 'Meridian', 'Others'],
-    'BYD': ['Atto 3', 'Seal', 'e6', 'Others'],
-    'Mercedes-Benz': ['C-Class', 'E-Class', 'GLC', 'Others'],
-    'BMW': ['3 Series', '5 Series', 'X1', 'Others'],
-    'Audi': ['A4', 'Q3', 'Q5', 'Others'],
-    'Volvo': ['XC40', 'XC60', 'Others'],
+    'Volkswagen': ['Virtus', 'Taigun', 'Others'],
+    'MG': ['Astor', 'Hector', 'Others'],
+    'Skoda': ['Slavia', 'Kushaq', 'Others'],
     'Others': ['Others'],
   };
 
   const bikeModels: { [key: string]: string[] } = {
-    'Hero MotoCorp': ['Splendor Plus', 'Splendor+ XTEC', 'HF Deluxe', 'Passion Pro', 'Glamour', 'Xtreme 125R', 'Xtreme 160R', 'Xpulse 200', 'Karizma XMR', 'Destini 125', 'Pleasure+', 'Maestro Edge', 'Others'],
-    'Honda': ['Shine 100', 'Shine 125', 'SP 125', 'Unicorn', 'Hornet 2.0', 'CB350', 'CB300F', 'Activa 6G', 'Activa 125', 'Dio', 'Others'],
-    'Bajaj': ['Pulsar 125', 'Pulsar 150', 'Pulsar 220F', 'Pulsar NS200', 'Pulsar N250', 'Pulsar N160', 'Platina 100', 'Platina 110', 'CT 100', 'Avenger Street 160', 'Dominar 250', 'Dominar 400', 'Chetak (EV)', 'Others'],
-    'TVS': ['Apache RTR 160', 'Apache RTR 180', 'Apache RTR 200 4V', 'Raider 125', 'Sport', 'Radeon', 'Star City+', 'Jupiter', 'NTorq 125', 'iQube (EV)', 'Others'],
-    'Royal Enfield': ['Classic 350', 'Bullet 350', 'Meteor 350', 'Hunter 350', 'Himalayan 450', 'Continental GT 650', 'Interceptor 650', 'Scram 411', 'Guerrilla 450', 'Others'],
-    'Yamaha': ['FZ-S', 'FZ25', 'MT-15', 'R15 V4', 'RayZR', 'Fascino', 'Others'],
-    'Suzuki': ['Gixxer', 'Gixxer SF', 'Access 125', 'Burgman Street', 'Avenis', 'Others'],
-    'Ola Electric': ['S1 Pro', 'S1 Air', 'S1X', 'Others'],
-    'Ather': ['450X', '450S', 'Rizta', 'Others'],
+    'Hero MotoCorp': ['Splendor Plus', 'HF Deluxe', 'Xtreme 160R', 'Others'],
+    'Honda': ['Shine', 'Unicorn', 'Activa 6G', 'Others'],
+    'Bajaj': ['Pulsar 150', 'Pulsar NS200', 'Platina', 'Others'],
+    'TVS': ['Apache RTR 160', 'Raider 125', 'Jupiter', 'Others'],
+    'Royal Enfield': ['Classic 350', 'Hunter 350', 'Meteor 350', 'Others'],
+    'Yamaha': ['FZ-S', 'R15', 'RayZR', 'Others'],
+    'Suzuki': ['Gixxer', 'Access 125', 'Others'],
     'Others': ['Others'],
   };
 
-  // ---------------------------------------------------------------------
-  // OTHER OPTION LISTS
-  // ---------------------------------------------------------------------
-  const ramOptions = ['2GB', '4GB', '6GB', '8GB', '12GB', '16GB', '32GB+', 'Other'];
-  const storageOptions = ['32GB', '64GB', '128GB', '256GB', '512GB', '1TB', '2TB+', 'Other'];
+  const ramOptions = ['2GB', '4GB', '6GB', '8GB', '12GB', '16GB', 'Other'];
+  const storageOptions = ['32GB', '64GB', '128GB', '256GB', '512GB', 'Other'];
   const fuelOptions = ['Petrol', 'Diesel', 'CNG', 'Electric', 'Hybrid'];
   const transmissionOptions = ['Manual', 'Automatic'];
   const ownersOptions = ['1st Owner', '2nd Owner', '3rd Owner', '3+ Owners'];
   const listingTypeOptions = ['Sell', 'Rent', 'PG'];
-  const bhkOptions = ['1 BHK', '2 BHK', '3 BHK', '4 BHK', '4+ BHK', 'Villa / Plot'];
+  const bhkOptions = ['1 BHK', '2 BHK', '3 BHK', '4+ BHK', 'Villa / Plot'];
   const furnishingOptions = ['Furnished', 'Semi-Furnished', 'Unfurnished'];
   const jobTypeList = ['Full-time', 'Part-time', 'Internship', 'Work from Home', 'Freelance'];
   const experienceOptions = ['Fresher', '1-3 yrs', '3-5 yrs', '5+ yrs'];
   const jobListingTypeOptions = ['Hiring (Job Vacancy)', 'Looking for Job (Job Wanted)'];
-  const educationOptions = ['No Formal Education', 'Below 10th', '10th Pass', 'Intermediate / 12th', 'ITI / Diploma', 'Graduate (B.A/B.Com/B.Sc etc.)', 'B.Tech / Engineering', 'Post Graduate', 'Others'];
+  const educationOptions = ['Below 10th', '10th Pass', 'Intermediate / 12th', 'ITI / Diploma', 'Graduate', 'B.Tech / Engineering', 'Post Graduate', 'Others'];
   const conditionList = ['New', 'Excellent', 'Good', 'Fair', 'Needs Repair'];
   const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size', 'Other'];
-  const petBreedOptions = ['Labrador', 'German Shepherd', 'Golden Retriever', 'Pug', 'Beagle', 'Pomeranian', 'Shih Tzu', 'Rottweiler', 'Dobermann', 'Husky', 'Indie/Mixed Breed', 'Persian Cat', 'Siamese Cat', 'Indie Cat', 'Parrot', 'Love Bird', 'Other'];
+  const petBreedOptions = ['Labrador', 'German Shepherd', 'Golden Retriever', 'Pug', 'Beagle', 'Indie/Mixed Breed', 'Persian Cat', 'Indie Cat', 'Parrot', 'Others'];
   const petAgeOptions = ['< 3 months', '3-12 months', '1-3 yrs', '3+ yrs'];
   const serviceCategoryOptions = ['Education', 'Repair Services', 'Beauty & Wellness', 'Travel', 'Legal / Documents', 'Home Renovation'];
 
@@ -165,13 +154,12 @@ export default function AdPostScreen({ route, navigation }: any) {
   const handleSelectModalItem = (item: string) => {
     if (modalType === 'category') {
       setCategoryName(item);
-      // Category changed — reset fields that only made sense for the old category
       setBrand('');
       setModel('');
     }
     else if (modalType === 'brand') {
       setBrand(item);
-      setModel(''); // reset dependent model when brand changes
+      setModel('');
     }
     else if (modalType === 'model') setModel(item);
     else if (modalType === 'ram') setRam(item);
@@ -186,7 +174,6 @@ export default function AdPostScreen({ route, navigation }: any) {
     else if (modalType === 'experience') setExperience(item);
     else if (modalType === 'jobListingType') {
       setJobListingType(item);
-      // Listing type changed — reset fields that only applied to the other side
       setEducationQualification('');
       setMinQualification('');
       setCompanyName('');
@@ -227,9 +214,6 @@ export default function AdPostScreen({ route, navigation }: any) {
     ]);
   };
 
-  // ---------------------------------------------------------------------
-  // CATEGORY DETECTION
-  // ---------------------------------------------------------------------
   const catLower = categoryName.toLowerCase();
   const isMobile = catLower.includes('mobile');
   const isCar = catLower.includes('car');
@@ -244,7 +228,6 @@ export default function AdPostScreen({ route, navigation }: any) {
   const isHiring = isJob && jobListingType === 'Hiring (Job Vacancy)';
   const isJobSeeker = isJob && jobListingType === 'Looking for Job (Job Wanted)';
 
-  // pick correct brand/model list for the current category
   const currentBrandList = isMobile ? mobileBrandList
     : isLaptop ? laptopBrandList
     : isCar ? carBrandList
@@ -259,7 +242,6 @@ export default function AdPostScreen({ route, navigation }: any) {
 
   const currentModelOptions = brand ? (currentModelMap[brand] || ['Others']) : [];
 
-  // Category-specific placeholder text for the Item Title field
   const titlePlaceholder = isMobile ? 'e.g., iPhone 15 Pro / Samsung Galaxy S24'
     : isLaptop ? 'e.g., Dell Inspiron 15 / MacBook Air M2'
     : isCar ? 'e.g., Honda City VX / Maruti Swift ZXI'
@@ -268,7 +250,7 @@ export default function AdPostScreen({ route, navigation }: any) {
     : isHiring ? 'e.g., Data Entry Executive / Delivery Boy Required'
     : isJobSeeker ? 'e.g., Experienced Data Entry Operator Available'
     : isJob ? 'e.g., Data Entry Executive Required / Available'
-    : isFashion ? 'e.g., Men\'s Formal Shirt / Women\'s Kurti Set'
+    : isFashion ? "e.g., Men's Formal Shirt / Women's Kurti Set"
     : isPet ? 'e.g., Labrador Puppies for Sale'
     : isService ? 'e.g., Home AC Repair / Home Tuition Classes'
     : 'e.g., Sofa Set 3+2 / Study Table';
@@ -291,7 +273,6 @@ export default function AdPostScreen({ route, navigation }: any) {
       return;
     }
 
-    // Resolve "Others" selections to whatever the user manually typed
     const finalBrand = isOther(brand) ? (customValues.brand || '').trim() : brand;
     const finalModel = isOther(model) ? (customValues.model || '').trim() : model;
     const finalRam = isOther(ram) ? (customValues.ram || '').trim() : ram;
@@ -317,6 +298,8 @@ export default function AdPostScreen({ route, navigation }: any) {
     setLoading(true);
     try {
       await addDocument('marketplaceListings', {
+        sellerId: auth.currentUser?.uid,
+        sellerName: auth.currentUser?.displayName || auth.currentUser?.email || 'Scrapo User',
         category: categoryName,
         title,
         price: priceOrSalary,
@@ -352,7 +335,6 @@ export default function AdPostScreen({ route, navigation }: any) {
         },
         images: validImages,
         status: 'Active',
-        createdAt: new Date().toISOString(),
       });
       Alert.alert('Success', 'Ad posted successfully!');
       navigation.goBack();
@@ -390,7 +372,6 @@ export default function AdPostScreen({ route, navigation }: any) {
           onChangeText={setTitle}
         />
 
-        {/* Brand + dependent Model (Mobile / Laptop / Car / Bike) */}
         {(isMobile || isCar || isBike || isLaptop) && (
           <>
             <Text style={styles.label}>Brand *</Text>
@@ -429,7 +410,6 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        {/* Mobile Specific */}
         {isMobile && (
           <>
             <Text style={styles.label}>RAM *</Text>
@@ -462,7 +442,6 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        {/* Cars & Bikes */}
         {(isCar || isBike) && (
           <>
             {isCar && (
@@ -506,7 +485,6 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        {/* Property */}
         {isProperty && (
           <>
             <Text style={styles.label}>Listing Type *</Text>
@@ -536,7 +514,6 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        {/* Jobs */}
         {isJob && (
           <>
             <Text style={styles.label}>Job Listing Type *</Text>
@@ -544,7 +521,6 @@ export default function AdPostScreen({ route, navigation }: any) {
               <Text style={styles.dropdownButtonText}>{jobListingType || 'Are you Hiring or Looking for a Job?'}</Text>
             </TouchableOpacity>
 
-            {/* ---------- Employer posting a vacancy ---------- */}
             {isHiring && (
               <>
                 <Text style={styles.label}>Company / Business Name</Text>
@@ -573,7 +549,6 @@ export default function AdPostScreen({ route, navigation }: any) {
               </>
             )}
 
-            {/* ---------- Job seeker looking for work ---------- */}
             {isJobSeeker && (
               <>
                 <Text style={styles.label}>Education Qualification *</Text>
@@ -613,7 +588,6 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        {/* Fashion */}
         {isFashion && (
           <>
             <Text style={styles.label}>Size *</Text>
@@ -632,7 +606,6 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        {/* Pets */}
         {isPet && (
           <>
             <Text style={styles.label}>Breed *</Text>
@@ -656,7 +629,6 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        {/* Services */}
         {isService && (
           <>
             <Text style={styles.label}>Service Category *</Text>
@@ -671,7 +643,6 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        {/* Condition (Mobile / Laptop / Electronics / Furniture / Fashion) */}
         {needsCondition && (
           <>
             <Text style={styles.label}>Condition</Text>
@@ -681,7 +652,6 @@ export default function AdPostScreen({ route, navigation }: any) {
           </>
         )}
 
-        {/* Price or Salary */}
         <Text style={styles.label}>
           {isJobSeeker ? 'Expected Salary (₹) *' : isJob ? 'Salary / Pay Range (₹) *' : 'Price (₹) *'}
         </Text>
@@ -694,14 +664,13 @@ export default function AdPostScreen({ route, navigation }: any) {
           onChangeText={setPriceOrSalary}
         />
 
-        <Text style={styles.label}>Pickup Location (Auto-detected)</Text>
-        <TextInput
-          style={[styles.input, styles.disabledInput]}
-          value={location}
-          editable={false}
-        />
+        <Text style={styles.label}>Pickup Location</Text>
+        <TouchableOpacity style={styles.dropdownButton} onPress={handleUseCurrentLocation} disabled={locating}>
+          <Text style={styles.dropdownButtonText}>
+            {locating ? 'Detecting...' : (location || 'Use Current Location')}
+          </Text>
+        </TouchableOpacity>
 
-        {/* Images (Not strictly required for Jobs/Services) */}
         {!isJob && !isService && (
           <>
             <Text style={styles.label}>Product Images (Min 2, Max 10 Required)</Text>
@@ -754,7 +723,6 @@ export default function AdPostScreen({ route, navigation }: any) {
         )}
       </View>
 
-      {/* Floating Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
