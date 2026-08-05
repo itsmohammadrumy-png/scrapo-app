@@ -19,6 +19,7 @@ export default function HomeScreen({ navigation }: any) {
         <Text style={styles.cardDesc}>Get the best prices for your old newspapers, iron, plastic, and more.</Text>
         <TouchableOpacity 
           style={styles.button}
+        onLongPress={() => navigation.navigate('ScrapListings')}
           onPress={() => navigation.navigate('Sell')}
         >
           <Text style={styles.buttonText}>{t('sellScrap')}</Text>

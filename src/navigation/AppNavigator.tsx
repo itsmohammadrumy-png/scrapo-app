@@ -22,6 +22,7 @@ import ScrapUploadScreen from '../screens/ScrapUploadScreen';
 import AdPostScreen from '../screens/AdPostScreen';
 import AdDetailScreen from '../screens/AdDetailScreen';
 import ChatDetailScreen from '../screens/ChatDetailScreen';
+import ScrapListingsScreen from '../screens/ScrapListingsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -76,6 +77,7 @@ export default function AppNavigator() {
             <Stack.Screen name="AdPost" component={AdPostScreen} options={{ headerShown: true, title: 'Post Ad' }} />
             <Stack.Screen name="AdDetail" component={AdDetailScreen} options={{ headerShown: true, title: 'Details' }} />
             <Stack.Screen name="ChatDetail" component={ChatDetailScreen} options={{ headerShown: true }} />
+            <Stack.Screen name="ScrapListings" component={ScrapListingsScreen} options={{ headerShown: true, title: 'Scrap Listings' }} />
           </>
         ) : (
           <>
