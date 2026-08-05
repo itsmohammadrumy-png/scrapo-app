@@ -1,20 +1,14 @@
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { storage } from '../config/firebase';
+import storage from '@react-native-firebase/storage';
 
-// ఇమేజ్ అప్లోడ్ చేసి దాని డౌన్‌లోడ్ URL రిటర్న్ చేయడానికి
-export const uploadImage = async (uri: string, path: string) => {
-  try {
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    
-    const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, storageRef); // సవరణ: uploadBytes(storageRef, blob)
-    
-    const downloadURL = await getDownloadURL(storageRef);
-    return downloadURL;
-  } catch (error) {
-    console.error("Error uploading image: ", error);
-    throw error;
-  }
+export const uploadImage = async (uri: string, folder: string): Promise<string> => {
+  const filename = `${folder}/${Date.now()}_${Math.floor(Math.random() * 10000)}.jpg`;
+  const reference = storage().ref(filename);
+  await reference.putFile(uri);
+  const url = await reference.getDownloadURL();
+  return url;
 };
 
+export const uploadMultipleImages = async (uris: string[], folder: string): Promise<string[]> => {
+  const uploadPromises = uris.map((uri) => uploadImage(uri, folder));
+  return Promise.all(uploadPromises);
+};
