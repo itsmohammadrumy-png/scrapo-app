@@ -2,16 +2,25 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Text } from 'react-native';
 import { collection, addDoc, doc, updateDoc, query, orderBy, onSnapshot, serverTimestamp } from '@react-native-firebase/firestore';
 import { db, auth } from '../config/firebase';
+import RatingModal from '../components/RatingModal';
 
 export default function ChatDetailScreen({ route, navigation }: any) {
-  const { chatId, recipientName } = route.params;
+  const { chatId, recipientName, recipientId } = route.params;
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState('');
+  const [ratingVisible, setRatingVisible] = useState(false);
   const currentUid = auth.currentUser?.uid;
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
-    navigation.setOptions({ title: recipientName || 'Chat' });
+    navigation.setOptions({
+      title: recipientName || 'Chat',
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setRatingVisible(true)} style={{ marginRight: 12 }}>
+          <Text style={{ color: '#2e7d32', fontWeight: 'bold' }}>Rate</Text>
+        </TouchableOpacity>
+      ),
+    });
 
     const messagesRef = collection(db, 'chats', chatId, 'messages');
     const q = query(messagesRef, orderBy('timestamp', 'asc'));
@@ -82,9 +91,16 @@ export default function ChatDetailScreen({ route, navigation }: any) {
           multiline
         />
         <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-          <Text style={styles.sendButtonText}>➤</Text>
+          <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>
+
+      <RatingModal
+        visible={ratingVisible}
+        onClose={() => setRatingVisible(false)}
+        ratedUserId={recipientId}
+        listingId={chatId}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -108,6 +124,9 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: '#f0f0f0', borderRadius: 20, paddingHorizontal: 16,
     paddingVertical: 10, fontSize: 14, maxHeight: 100, marginRight: 8,
   },
-  sendButton: { backgroundColor: '#2e7d32', width: 42, height: 42, borderRadius: 21, justifyContent: 'center', alignItems: 'center' },
-  sendButtonText: { color: '#fff', fontSize: 18 },
+  sendButton: {
+    backgroundColor: '#2e7d32', paddingHorizontal: 16, height: 42, borderRadius: 21,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  sendButtonText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
 });
