@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { getCurrentLocation, getAddressFromCoordinates } from '../services/locationService';
-import { getCurrentLocation, getAddressFromCoordinates } from '../services/locationService';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Modal, FlatList } from 'react-native';
 import { addDocument } from '../services/firestoreService';
 import { MARKET_CATEGORIES } from '../constants/marketCategories';
