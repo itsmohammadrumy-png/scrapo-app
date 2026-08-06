@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { getUserRatings } from '../services/ratingService';
 import {
   View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert,
   StatusBar, Modal, TextInput, Image, ScrollView, Share,
@@ -19,6 +20,7 @@ export default function ProfileScreen({ navigation }: any) {
   const [updating, setUpdating] = useState(false);
 
   const [greenCoins, setGreenCoins] = useState(150);
+  const [rating, setRating] = useState({ average: 0, total: 0 });
   const currentUser = auth.currentUser;
 
   const fetchUserDataAndListings = async () => {
@@ -31,6 +33,11 @@ export default function ProfileScreen({ navigation }: any) {
       const snapshot = await getDocs(q);
       const listings = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
       setUserListings(listings);
+
+      if (currentUser) {
+        const userRating = await getUserRatings(currentUser.uid);
+        setRating(userRating);
+      }
     } catch (error) {
       console.error('Error fetching user listings:', error);
     } finally {
@@ -161,7 +168,7 @@ export default function ProfileScreen({ navigation }: any) {
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
               <Ionicons name="star" size={18} color="#fbc02d" />
-              <Text style={styles.statNumber}>4.8</Text>
+              <Text style={styles.statNumber}>{rating.average || "New"}</Text>
               <Text style={styles.statLabel}>Rating</Text>
             </View>
             <View style={styles.statDivider} />
