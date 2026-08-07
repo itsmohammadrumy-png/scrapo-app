@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { getUserRatings } from '../services/ratingService';
+import { getReferralCode } from '../services/userService';
 import { getGreenCoins } from '../services/userService';
 import {
   View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert,
@@ -74,7 +75,7 @@ export default function ProfileScreen({ navigation }: any) {
   const handleReferralShare = async () => {
     try {
       await Share.share({
-        message: `🌿 Scrapo యాప్‌లో జాయిన్ అవ్వండి మరియు గ్రీన్ కాయిన్స్ సంపాదించండి! నా రెఫరల్ కోడ్ ద్వారా సైన్ అప్ చేయండి: SCRAPO123`,
+        message: `🌿 Scrapo యాప్‌లో జాయిన్ అవ్వండి మరియు గ్రీన్ కాయిన్స్ సంపాదించండి! నా రెఫరల్ కోడ్ ద్వారా సైన్ అప్ చేయండి: ${getReferralCode(currentUser?.uid || "")}`,
       });
     } catch (error) {
       console.error('Error sharing referral:', error);

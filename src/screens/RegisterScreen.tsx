@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { registerUser } from '../services/authService';
+import { applyReferralCode } from '../services/userService';
 
 export default function RegisterScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [referralCode, setReferralCode] = useState('');
 
   const handleRegister = async () => {
     if (!email || !password) {
@@ -12,7 +14,10 @@ export default function RegisterScreen({ navigation }: any) {
       return;
     }
     try {
-      await registerUser(email, password);
+      const newUser = await registerUser(email, password);
+      if (referralCode.trim()) {
+        await applyReferralCode(referralCode.trim().toUpperCase(), newUser.uid);
+      }
       Alert.alert('Success', 'Account created successfully!');
       navigation.replace('MainApp');
     } catch (error: any) {
@@ -41,6 +46,15 @@ export default function RegisterScreen({ navigation }: any) {
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Referral Code (optional)"
+        placeholderTextColor="#888"
+        autoCapitalize="characters"
+        value={referralCode}
+        onChangeText={setReferralCode}
       />
 
       <TouchableOpacity style={styles.button} onPress={handleRegister}>
