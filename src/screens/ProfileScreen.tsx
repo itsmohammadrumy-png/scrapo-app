@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { getUserRatings } from '../services/ratingService';
+import { getGreenCoins } from '../services/userService';
 import {
   View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert,
   StatusBar, Modal, TextInput, Image, ScrollView, Share,
@@ -19,7 +20,7 @@ export default function ProfileScreen({ navigation }: any) {
   const [photoURL, setPhotoURL] = useState('');
   const [updating, setUpdating] = useState(false);
 
-  const [greenCoins, setGreenCoins] = useState(150);
+  const [greenCoins, setGreenCoins] = useState(0);
   const [rating, setRating] = useState({ average: 0, total: 0 });
   const currentUser = auth.currentUser;
 
@@ -37,6 +38,9 @@ export default function ProfileScreen({ navigation }: any) {
       if (currentUser) {
         const userRating = await getUserRatings(currentUser.uid);
         setRating(userRating);
+
+      const coins = await getGreenCoins(currentUser.uid);
+      setGreenCoins(coins);
       }
     } catch (error) {
       console.error('Error fetching user listings:', error);

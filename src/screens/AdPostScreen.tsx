@@ -3,6 +3,8 @@ import { getCurrentLocation, getAddressFromCoordinates } from '../services/locat
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Modal, FlatList } from 'react-native';
 import { addDocument } from '../services/firestoreService';
 import { MARKET_CATEGORIES } from '../constants/marketCategories';
+import { auth } from '../config/firebase';
+import { addGreenCoins } from '../services/userService';
 
 export default function AdPostScreen({ route, navigation }: any) {
   // If a categoryName was passed in (e.g. user had a category selected on
@@ -332,6 +334,8 @@ export default function AdPostScreen({ route, navigation }: any) {
     setLoading(true);
     try {
       await addDocument('marketplaceListings', {
+        sellerId: auth.currentUser?.uid,
+        sellerName: auth.currentUser?.displayName || auth.currentUser?.email || 'Scrapo User',
         category: categoryName,
         title,
         price: priceOrSalary,
@@ -369,7 +373,10 @@ export default function AdPostScreen({ route, navigation }: any) {
         status: 'Active',
         createdAt: new Date().toISOString(),
       });
-      Alert.alert('Success', 'Ad posted successfully!');
+      if (auth.currentUser?.uid) {
+        await addGreenCoins(auth.currentUser.uid, 5);
+      }
+      Alert.alert('Success', 'Ad posted successfully, plus 5 Green Coins earned.');
       navigation.goBack();
     } catch (error) {
       console.error('Error posting ad:', error);
