@@ -255,7 +255,7 @@ export default function ProfileScreen({ navigation }: any) {
 
         <Text style={styles.sectionTitleAccount}>Account</Text>
         <View style={styles.accountCard}>
-          <TouchableOpacity style={styles.accountItem}>
+          <TouchableOpacity style={styles.accountItem} onPress={() => setIsEditModalVisible(true)}>
             <View style={styles.accountItemLeft}>
               <Ionicons name="person-outline" size={18} color="#2e7d32" />
               <Text style={styles.accountItemText}>Personal Information</Text>
