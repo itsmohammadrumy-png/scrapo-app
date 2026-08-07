@@ -8,6 +8,7 @@ import { addDocument } from '../services/firestoreService';
 import { uploadMultipleImages } from '../services/storageService';
 import { getCurrentLocation, getAddressFromCoordinates } from '../services/locationService';
 import { auth } from '../config/firebase';
+import { addGreenCoins } from '../services/userService';
 
 export default function ScrapUploadScreen({ route, navigation }: any) {
   const { categoryName } = route.params || { categoryName: 'General Scrap' };
@@ -97,7 +98,10 @@ export default function ScrapUploadScreen({ route, navigation }: any) {
         interestedBuyers: [],
       });
 
-      Alert.alert('Success', 'Scrap pickup request posted successfully!');
+      if (auth.currentUser?.uid) {
+        await addGreenCoins(auth.currentUser.uid, 10);
+      }
+      Alert.alert('Success', 'Scrap pickup request posted successfully, plus 10 Green Coins earned.');
       navigation.goBack();
     } catch (error) {
       console.error('Error posting scrap:', error);
