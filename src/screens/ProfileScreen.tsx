@@ -31,10 +31,15 @@ export default function ProfileScreen({ navigation }: any) {
       setDisplayName(currentUser.displayName || '');
       setPhotoURL(currentUser.photoURL || '');
 
-      const q = query(collection(db, 'marketplaceListings'), where('sellerId', '==', currentUser.uid));
-      const snapshot = await getDocs(q);
-      const listings = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-      setUserListings(listings);
+      const marketQ = query(collection(db, "marketplaceListings"), where("sellerId", "==", currentUser.uid));
+      const marketSnap = await getDocs(marketQ);
+      const marketListings = marketSnap.docs.map((d) => ({ id: d.id, listingType: "marketplace", ...d.data() }));
+
+      const scrapQ = query(collection(db, "scrapListings"), where("sellerId", "==", currentUser.uid));
+      const scrapSnap = await getDocs(scrapQ);
+      const scrapListingsData = scrapSnap.docs.map((d) => ({ id: d.id, listingType: "scrap", ...d.data() }));
+
+      setUserListings([...marketListings, ...scrapListingsData]);
 
       if (currentUser) {
         const userRating = await getUserRatings(currentUser.uid);
@@ -82,7 +87,7 @@ export default function ProfileScreen({ navigation }: any) {
     }
   };
 
-  const handleDeleteListing = async (listingId: string) => {
+  const handleDeleteListing = async (listingId: string, listingType: string) => {
     Alert.alert('Delete Listing', 'మీరు నిజంగా ఈ యాడ్‌ని డిలీట్ చేయాలనుకుంటున్నారా?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -90,7 +95,8 @@ export default function ProfileScreen({ navigation }: any) {
         style: 'destructive',
         onPress: async () => {
           try {
-            await deleteDoc(doc(db, 'marketplaceListings', listingId));
+            const coll = listingType === 'scrap' ? 'scrapListings' : 'marketplaceListings';
+            await deleteDoc(doc(db, coll, listingId));
             setUserListings((prev) => prev.filter((item) => item.id !== listingId));
             Alert.alert('Success', 'యాడ్ విజయవంతంగా డిలీట్ చేయబడింది.');
           } catch (error) {
@@ -231,8 +237,8 @@ export default function ProfileScreen({ navigation }: any) {
           userListings.map((item) => (
             <View key={item.id} style={styles.listingCard}>
               <View style={styles.listingInfo}>
-                <Text style={styles.listingTitle} numberOfLines={1}>{item.title}</Text>
-                <Text style={styles.listingPrice}>₹ {item.price || item.expectedSalary || 'N/A'}</Text>
+                <Text style={styles.listingTitle} numberOfLines={1}>{item.listingType === 'scrap' ? item.category : item.title}</Text>
+                <Text style={styles.listingPrice}>{item.listingType === 'scrap' ? `${item.weightKg} KG` : `₹ ${item.price || item.expectedSalary || 'N/A'}`}</Text>
                 <View style={styles.badgeContainer}>
                   <Text style={styles.listingCategory}>{item.category}</Text>
                   <Text style={styles.listingDate}>
@@ -240,7 +246,7 @@ export default function ProfileScreen({ navigation }: any) {
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteListing(item.id)}>
+              <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteListing(item.id, item.listingType)}>
                 <Text style={styles.deleteButtonText}>Delete</Text>
               </TouchableOpacity>
             </View>
