@@ -30,3 +30,18 @@ export const getGreenCoins = async (uid: string): Promise<number> => {
   const snap = await getDoc(userRef);
   return snap.exists ? (snap.data()?.greenCoins || 0) : 0;
 };
+
+export const applyReferralCode = async (code: string, newUserId: string) => {
+  const { collection, query, where, getDocs } = require('@react-native-firebase/firestore');
+  const usersRef = collection(db, 'users');
+  const q = query(usersRef, where('referralCode', '==', code));
+  const snapshot = await getDocs(q);
+  if (!snapshot.empty) {
+    const referrerDoc = snapshot.docs[0];
+    if (referrerDoc.id !== newUserId) {
+      await addGreenCoins(referrerDoc.id, 50);
+    }
+  }
+};
+
+export const getReferralCode = (uid: string) => uid.substring(0, 6).toUpperCase();
