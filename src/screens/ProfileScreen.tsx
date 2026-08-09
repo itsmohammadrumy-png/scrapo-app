@@ -263,7 +263,7 @@ export default function ProfileScreen({ navigation }: any) {
             <Ionicons name="chevron-forward" size={16} color="#aaa" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.accountItem}>
+          <TouchableOpacity style={styles.accountItem} onPress={() => navigation.navigate('SavedAddresses')}>
             <View style={styles.accountItemLeft}>
               <Ionicons name="location-outline" size={18} color="#2e7d32" />
               <Text style={styles.accountItemText}>Saved Addresses</Text>

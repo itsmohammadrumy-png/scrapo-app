@@ -45,3 +45,25 @@ export const applyReferralCode = async (code: string, newUserId: string) => {
 };
 
 export const getReferralCode = (uid: string) => uid.substring(0, 6).toUpperCase();
+
+export const getSavedAddresses = async (uid: string): Promise<any[]> => {
+  const userRef = doc(db, 'users', uid);
+  const snap = await getDoc(userRef);
+  return snap.exists ? (snap.data()?.savedAddresses || []) : [];
+};
+
+export const addSavedAddress = async (uid: string, address: string) => {
+  const addresses = await getSavedAddresses(uid);
+  const updated = [...addresses, { id: Date.now().toString(), text: address }];
+  const userRef = doc(db, 'users', uid);
+  await setDoc(userRef, { savedAddresses: updated }, { merge: true });
+  return updated;
+};
+
+export const removeSavedAddress = async (uid: string, addressId: string) => {
+  const addresses = await getSavedAddresses(uid);
+  const updated = addresses.filter((a: any) => a.id !== addressId);
+  const userRef = doc(db, 'users', uid);
+  await setDoc(userRef, { savedAddresses: updated }, { merge: true });
+  return updated;
+};
