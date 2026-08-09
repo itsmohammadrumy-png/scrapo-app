@@ -271,7 +271,7 @@ export default function ProfileScreen({ navigation }: any) {
             <Ionicons name="chevron-forward" size={16} color="#aaa" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.accountItem}>
+          <TouchableOpacity style={styles.accountItem} onPress={() => navigation.navigate('MyBookings')}>
             <View style={styles.accountItemLeft}>
               <Ionicons name="receipt-outline" size={18} color="#2e7d32" />
               <Text style={styles.accountItemText}>My Bookings</Text>

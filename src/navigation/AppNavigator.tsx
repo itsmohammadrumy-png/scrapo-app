@@ -24,6 +24,7 @@ import AdDetailScreen from '../screens/AdDetailScreen';
 import ChatDetailScreen from '../screens/ChatDetailScreen';
 import ScrapListingsScreen from '../screens/ScrapListingsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import MyBookingsScreen from '../screens/MyBookingsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -80,6 +81,7 @@ export default function AppNavigator() {
             <Stack.Screen name="ChatDetail" component={ChatDetailScreen} options={{ headerShown: true }} />
             <Stack.Screen name="ScrapListings" component={ScrapListingsScreen} options={{ headerShown: true, title: 'Scrap Listings' }} />
             <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: true, title: "Settings" }} />
+            <Stack.Screen name="MyBookings" component={MyBookingsScreen} options={{ headerShown: true, title: "My Bookings" }} />
           </>
         ) : (
           <>

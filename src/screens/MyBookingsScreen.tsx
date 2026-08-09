@@ -37,7 +37,7 @@ export default function MyBookingsScreen() {
       <Text style={styles.category}>{item.category}</Text>
       <Text style={styles.weight}>{item.weightKg} KG</Text>
       <Text style={styles.interestCount}>
-        {item.interestedBuyers.length} buyer(s) interested
+        {item.interestedBuyers.length} buyer interested
       </Text>
     </View>
   );
@@ -49,7 +49,7 @@ export default function MyBookingsScreen() {
       ) : bookings.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No pickup bookings yet.</Text>
-          <Text style={styles.emptySubText}>When buyers show interest in your scrap posts, they'll appear here.</Text>
+          <Text style={styles.emptySubText}>When buyers show interest in your scrap posts, they will appear here.</Text>
         </View>
       ) : (
         <FlatList
