@@ -1,85 +1,91 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
+import { getGreenCoins } from '../services/userService';
+import { auth } from '../config/firebase';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function HomeScreen({ navigation }: any) {
-  const { t } = useTranslation();
+  const [greenCoins, setGreenCoins] = useState(0);
+  const currentUser = auth.currentUser;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (currentUser?.uid) {
+        getGreenCoins(currentUser.uid).then(setGreenCoins);
+      }
+    }, [currentUser])
+  );
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header Section */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>{t('welcome')}</Text>
+        <Text style={styles.greeting}>
+          Hello, {currentUser?.displayName || currentUser?.email?.split('@')[0] || 'there'}!
+        </Text>
         <Text style={styles.subtitle}>Recycle scrap easily & earn cash</Text>
       </View>
 
-      {/* Quick Action Card */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Have Scrap to Sell?</Text>
-        <Text style={styles.cardDesc}>Get the best prices for your old newspapers, iron, plastic, and more.</Text>
-        <TouchableOpacity 
-          style={styles.button}
-        onLongPress={() => navigation.navigate('ScrapListings')}
-          onPress={() => navigation.navigate('Sell')}
-        >
-          <Text style={styles.buttonText}>{t('sellScrap')}</Text>
-        </TouchableOpacity>
+      <View style={styles.coinCard}>
+        <Ionicons name="leaf" size={24} color="#fff" />
+        <View style={{ marginLeft: 12 }}>
+          <Text style={styles.coinLabel}>Green Coins</Text>
+          <Text style={styles.coinValue}>{greenCoins}</Text>
+        </View>
       </View>
+
+      <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Sell')}>
+        <View style={styles.cardIconCircle}>
+          <Ionicons name="leaf-outline" size={26} color="#2e7d32" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>Have Scrap to Sell?</Text>
+          <Text style={styles.cardDesc}>Get the best prices for iron, plastic, paper and more.</Text>
+        </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Marketplace')}>
+        <View style={styles.cardIconCircle}>
+          <Ionicons name="cart-outline" size={26} color="#2e7d32" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>Browse Marketplace</Text>
+          <Text style={styles.cardDesc}>Mobiles, cars, furniture, jobs and more near you.</Text>
+        </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('ScrapListings')}>
+        <View style={styles.cardIconCircle}>
+          <Ionicons name="cube-outline" size={26} color="#2e7d32" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>Buy Scrap Nearby</Text>
+          <Text style={styles.cardDesc}>Browse scrap listings posted by sellers near you.</Text>
+        </View>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 16,
+  container: { flex: 1, backgroundColor: '#f5f5f5', padding: 16 },
+  header: { marginTop: 20, marginBottom: 16 },
+  greeting: { fontSize: 22, fontWeight: 'bold', color: '#333' },
+  subtitle: { fontSize: 14, color: '#666', marginTop: 4 },
+  coinCard: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#2e7d32',
+    borderRadius: 12, padding: 16, marginBottom: 16,
   },
-  header: {
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
+  coinLabel: { color: '#e8f5e9', fontSize: 12 },
+  coinValue: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12,
+    padding: 16, marginBottom: 12, elevation: 2,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2e7d32',
-    marginBottom: 8,
+  cardIconCircle: {
+    width: 50, height: 50, borderRadius: 25, backgroundColor: '#e8f5e9',
+    justifyContent: 'center', alignItems: 'center', marginRight: 14,
   },
-  cardDesc: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 16,
-  },
-  button: {
-    backgroundColor: '#2e7d32',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#333' },
+  cardDesc: { fontSize: 12, color: '#666', marginTop: 4 },
 });
-
