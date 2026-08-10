@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import Icon from '@react-native-vector-icons/ionicons';
+import Icon from '../components/Icon';
 import { SCRAP_CATEGORIES } from '../constants/scrapCategories';
 
 export default function SellScrapScreen({ navigation }: any) {

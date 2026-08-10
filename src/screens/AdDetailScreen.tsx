@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, updateDoc, arrayUnion, arrayRemove } from '@react-native-firebase/firestore';
 import { db, auth } from '../config/firebase';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from '../components/Icon';
 
 const { width } = Dimensions.get('window');
 

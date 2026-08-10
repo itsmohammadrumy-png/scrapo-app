@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { logoutUser } from '../services/authService';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from '../components/Icon';
 
 export default function SettingsScreen({ navigation }: any) {
   const handleLogout = () => {

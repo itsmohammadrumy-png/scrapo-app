@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useFocusEffect } from '@react-navigation/native';
 import { getGreenCoins } from '../services/userService';
 import { auth } from '../config/firebase';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from '../components/Icon';
 
 export default function HomeScreen({ navigation }: any) {
   const [greenCoins, setGreenCoins] = useState(0);

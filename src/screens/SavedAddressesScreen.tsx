@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Activity
 import { useFocusEffect } from '@react-navigation/native';
 import { getSavedAddresses, addSavedAddress, removeSavedAddress } from '../services/userService';
 import { auth } from '../config/firebase';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from '../components/Icon';
 
 export default function SavedAddressesScreen() {
   const [addresses, setAddresses] = useState<any[]>([]);

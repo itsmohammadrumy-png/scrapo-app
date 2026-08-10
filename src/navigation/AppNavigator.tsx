@@ -3,7 +3,7 @@ import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from '@react-native-vector-icons/ionicons';
+import Icon from '../components/Icon';
 import { useTranslation } from 'react-i18next';
 
 import { AuthContext } from '../context/AuthContext';
