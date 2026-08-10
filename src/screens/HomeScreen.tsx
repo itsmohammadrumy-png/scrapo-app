@@ -34,6 +34,16 @@ export default function HomeScreen({ navigation }: any) {
         </View>
       </View>
 
+      <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("ScrapRates")}>
+        <View style={styles.cardIconCircle}>
+          <Ionicons name="document-text-outline" size={26} color="#2e7d32" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>Today's Scrap Rates</Text>
+          <Text style={styles.cardDesc}>Check current prices for iron, copper, plastic and more.</Text>
+        </View>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Sell')}>
         <View style={styles.cardIconCircle}>
           <Ionicons name="leaf-outline" size={26} color="#2e7d32" />
