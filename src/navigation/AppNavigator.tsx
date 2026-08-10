@@ -26,6 +26,7 @@ import ScrapListingsScreen from '../screens/ScrapListingsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import MyBookingsScreen from '../screens/MyBookingsScreen';
 import SavedAddressesScreen from '../screens/SavedAddressesScreen';
+import MyFavoritesScreen from '../screens/MyFavoritesScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -84,6 +85,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: true, title: "Settings" }} />
             <Stack.Screen name="MyBookings" component={MyBookingsScreen} options={{ headerShown: true, title: "My Bookings" }} />
             <Stack.Screen name="SavedAddresses" component={SavedAddressesScreen} options={{ headerShown: true, title: "Saved Addresses" }} />
+            <Stack.Screen name="MyFavorites" component={MyFavoritesScreen} options={{ headerShown: true, title: "My Favorites" }} />
           </>
         ) : (
           <>

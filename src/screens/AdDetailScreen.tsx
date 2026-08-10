@@ -1,13 +1,35 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Dimensions } from 'react-native';
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, updateDoc, arrayUnion, arrayRemove } from '@react-native-firebase/firestore';
 import { db, auth } from '../config/firebase';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width } = Dimensions.get('window');
 
 export default function AdDetailScreen({ route, navigation }: any) {
   const { item } = route.params;
   const [loading, setLoading] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState((item.wishlistedBy || []).includes(auth.currentUser?.uid));
+
+  const toggleWishlist = async () => {
+    if (!currentUid) {
+      Alert.alert('Login Required', 'Please login to save favorites.');
+      return;
+    }
+    try {
+      const collName = item.listingType === 'scrap' ? 'scrapListings' : 'marketplaceListings';
+      const ref = doc(db, collName, item.id);
+      if (isWishlisted) {
+        await updateDoc(ref, { wishlistedBy: arrayRemove(currentUid) });
+        setIsWishlisted(false);
+      } else {
+        await updateDoc(ref, { wishlistedBy: arrayUnion(currentUid) });
+        setIsWishlisted(true);
+      }
+    } catch (error) {
+      console.error('Wishlist error:', error);
+    }
+  };
   const currentUid = auth.currentUser?.uid;
 
   const attributes = item.attributes || {};
@@ -82,7 +104,12 @@ export default function AdDetailScreen({ route, navigation }: any) {
       )}
 
       <View style={styles.content}>
-        <Text style={styles.price}>₹ {item.price ?? 'N/A'}</Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <Text style={styles.price}>₹ {item.price ?? "N/A"}</Text>
+          <TouchableOpacity onPress={toggleWishlist}>
+            <Ionicons name={isWishlisted ? "heart" : "heart-outline"} size={26} color="#c62828" />
+          </TouchableOpacity>
+        </View>
         <Text style={styles.title}>{item.title || item.category}</Text>
         <Text style={styles.location}>📍 {item.location || 'Location not specified'}</Text>
 
