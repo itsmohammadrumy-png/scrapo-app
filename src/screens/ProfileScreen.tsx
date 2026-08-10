@@ -287,7 +287,7 @@ export default function ProfileScreen({ navigation }: any) {
             <Ionicons name="chevron-forward" size={16} color="#aaa" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.accountItem, { borderBottomWidth: 0 }]}>
+          <TouchableOpacity style={[styles.accountItem, { borderBottomWidth: 0 }]} onPress={() => navigation.navigate('Notifications')}>
             <View style={styles.accountItemLeft}>
               <Ionicons name="notifications-outline" size={18} color="#2e7d32" />
               <Text style={styles.accountItemText}>Notifications</Text>
