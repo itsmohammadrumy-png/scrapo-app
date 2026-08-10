@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-nativ
 import { useFocusEffect } from '@react-navigation/native';
 import { collection, query, where, orderBy, getDocs } from '@react-native-firebase/firestore';
 import { db, auth } from '../config/firebase';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState<any[]>([]);

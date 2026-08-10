@@ -10,7 +10,7 @@ import { collection, query, where, getDocs, deleteDoc, doc } from '@react-native
 import { updateProfile, signOut } from '@react-native-firebase/auth';
 import { db, auth } from '../config/firebase';
 import { useFocusEffect } from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 export default function ProfileScreen({ navigation }: any) {
   const [userListings, setUserListings] = useState<any[]>([]);
